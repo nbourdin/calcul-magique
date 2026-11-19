@@ -11,6 +11,7 @@ import { Icon } from '@/ui/Icon';
 import { EndScreen } from './EndScreen';
 import { HelpPanel } from './HelpPanel';
 import { useSession } from './sessionStore';
+import { ChronoBar } from './ChronoBar';
 import { StopDialog } from './StopDialog';
 
 /** Délai avant la question suivante après une bonne réponse (PRD §5). */
@@ -38,6 +39,8 @@ export function SeriesScreen() {
     (s) => s.skills.find((p) => p.skillId === skillId)?.level ?? s.profile?.settings.startLevel ?? 1,
   );
   const seriesBeforeBreak = useProfile((s) => s.profile?.settings.seriesBeforeBreak ?? 3);
+  const sessionMinutes = useProfile((s) => s.profile?.settings.sessionMinutes ?? 10);
+  const chronoMode = useProfile((s) => s.profile?.settings.chronoMode ?? 'off');
   const reloadProfile = useProfile((s) => s.load);
 
   const begin = useCallback(async () => {
@@ -48,8 +51,9 @@ export function SeriesScreen() {
       skillId,
       gameId: game.id,
       level: forcedLevel ?? startLevel,
+      chronoMode,
     });
-  }, [game, profileId, skillId, forcedLevel, startLevel, start]);
+  }, [game, profileId, skillId, forcedLevel, startLevel, chronoMode, start]);
 
   useEffect(() => {
     void begin();
@@ -99,7 +103,8 @@ export function SeriesScreen() {
         key={result.series.id}
         series={result.series}
         outcome={result.outcome}
-        suggestBreak={result.seriesToday >= seriesBeforeBreak}
+        // « À demain » après le nombre de séries ou la durée recommandés par le parent.
+        suggestBreak={result.seriesToday >= seriesBeforeBreak || result.minutesToday >= sessionMinutes}
         onReplay={() => void begin()}
       />
     );
@@ -145,6 +150,10 @@ export function SeriesScreen() {
           ))}
         </div>
       </header>
+
+      {chronoMode === 'on' && run.phase === 'question' && !stopAsked && (
+        <ChronoBar key={`${item.question.id}-${item.attempt}`} />
+      )}
 
       <Game
         key={`${item.question.id}-${item.attempt}`}

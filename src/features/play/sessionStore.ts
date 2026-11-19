@@ -8,9 +8,10 @@ import {
   submitAnswer,
   type RunState,
 } from '@/domain/engine/run';
+import { chronoBonus } from '@/domain/rewards/chrono';
 import { starsForSeries } from '@/domain/rewards/stars';
 import { createRng, type Rng } from '@/domain/rng';
-import type { GameId, Level, Series, SkillId } from '@/domain/types';
+import type { GameId, Level, Series, Settings, SkillId } from '@/domain/types';
 import { newId } from '@/data/db';
 import { countNewFactsToday, listFactStates, recordAnswer } from '@/data/progress';
 import { finishSeries, type FinishedSeries } from '@/data/rewards';
@@ -23,6 +24,7 @@ export interface SeriesResult {
   /** null si l'enregistrement des récompenses a échoué. */
   outcome: SeriesRewardOutcome | null;
   seriesToday: number;
+  minutesToday: number;
 }
 
 interface StartArgs {
@@ -32,6 +34,7 @@ interface StartArgs {
   skillId: SkillId;
   gameId: GameId;
   level: Level;
+  chronoMode?: Settings['chronoMode'];
   rng?: Rng;
   now?: () => number;
 }
@@ -51,6 +54,7 @@ interface Context {
   catalogIds: readonly string[];
   skillId: SkillId;
   gameId: GameId;
+  chronoMode: Settings['chronoMode'];
   seriesId: string;
   startedAt: number;
   now: () => number;
@@ -65,7 +69,7 @@ export const useSession = create<SessionState>()((set, get) => ({
   run: null,
   result: null,
 
-  async start({ profileId, catalogIds, skillId, gameId, level, rng, now = Date.now }) {
+  async start({ profileId, catalogIds, skillId, gameId, level, chronoMode = 'off', rng, now = Date.now }) {
     const token = ++generation;
     context = null;
     set({ status: 'loading', run: null, result: null });
@@ -84,7 +88,7 @@ export const useSession = create<SessionState>()((set, get) => ({
         rng: rng ?? createRng(Math.floor(Math.random() * 2 ** 32)),
       });
       if (token !== generation) return;
-      context = { profileId, catalogIds, skillId, gameId, seriesId: newId(), startedAt: t, now };
+      context = { profileId, catalogIds, skillId, gameId, chronoMode, seriesId: newId(), startedAt: t, now };
       set({ status: 'playing', run: startRun(plan.questions) });
     } catch (error) {
       console.error(error);
@@ -97,7 +101,7 @@ export const useSession = create<SessionState>()((set, get) => ({
     const item = run && currentItem(run);
     if (!run || !item || run.phase !== 'question' || !context) return;
     const ctx = context;
-    set({ run: submitAnswer(run, correct) });
+    set({ run: submitAnswer(run, correct, responseMs) });
     try {
       await recordAnswer({
         profileId: ctx.profileId,
@@ -134,7 +138,8 @@ export const useSession = create<SessionState>()((set, get) => ({
       startedAt: ctx.startedAt,
       endedAt: ctx.now(),
       stars: starsForSeries(firstTryCorrect),
-      mode: 'practice',
+      bonusStars: chronoBonus(ctx.chronoMode, nextRun.correctFirstTryMs),
+      mode: ctx.chronoMode === 'off' ? 'practice' : 'chrono',
       firstTryCorrect,
       questionCount: nextRun.questionCount,
     };
@@ -148,7 +153,12 @@ export const useSession = create<SessionState>()((set, get) => ({
     }
     set({
       status: 'done',
-      result: { series, outcome: finished?.outcome ?? null, seriesToday: finished?.seriesToday ?? 1 },
+      result: {
+        series,
+        outcome: finished?.outcome ?? null,
+        seriesToday: finished?.seriesToday ?? 1,
+        minutesToday: finished?.minutesToday ?? 0,
+      },
     });
   },
 

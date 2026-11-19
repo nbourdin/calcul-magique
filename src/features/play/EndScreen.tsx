@@ -93,6 +93,12 @@ export function EndScreen({ series, outcome, suggestBreak, onReplay }: EndScreen
           />
         </div>
       )}
+      {(series.bonusStars ?? 0) > 0 && (
+        <p className="flex items-center gap-2 text-instruction font-bold">
+          <Icon name="star" filled className="size-7 text-[#f5b82e]" />
+          {fr.end.bonus}
+        </p>
+      )}
       {streakText && <p className="text-instruction font-bold text-help">{streakText}</p>}
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-4">

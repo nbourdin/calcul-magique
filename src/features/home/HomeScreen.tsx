@@ -7,6 +7,7 @@ import { Flame, StarCount } from '@/features/rewards/Badges';
 import { Puzzle } from '@/features/rewards/Puzzle';
 import { fr } from '@/i18n/fr';
 import { Avatar } from '@/ui/Avatar';
+import { Icon } from '@/ui/Icon';
 import { buttonClass } from '@/ui/buttonClass';
 
 const WORLD_TONE = ['bg-mint', 'bg-sky', 'bg-rose', 'bg-[#fff1c9]', 'bg-primary-soft'];
@@ -14,7 +15,7 @@ const WORLD_TONE = ['bg-mint', 'bg-sky', 'bg-rose', 'bg-[#fff1c9]', 'bg-primary-
 export function HomeScreen() {
   const { profile, rewards, puzzles, facts } = useProfile();
   if (!profile || !rewards) return null;
-  const open = unlockedWorlds(facts);
+  const open = unlockedWorlds(facts, profile.settings.unlockAll);
   const active = rewards.activeCharacterId ? getCharacter(rewards.activeCharacterId) : undefined;
   const activeProgress = puzzles.find((p) => p.characterId === rewards.activeCharacterId);
   const placed = activeProgress ? placedPieces(activeProgress) : [];
@@ -30,9 +31,17 @@ export function HomeScreen() {
           <Avatar id={profile.avatar} className="size-14" />
           <span className="text-2xl font-extrabold">{fr.home.welcomeName(profile.name)}</span>
         </Link>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
           <StarCount stars={rewards.stars} />
           <Flame streak={rewards.streak} />
+          <Link
+            to="/parent"
+            aria-label={fr.parent.open}
+            title={fr.parent.open}
+            className="flex size-tap items-center justify-center rounded-full text-ink-soft opacity-70 transition hover:bg-surface hover:opacity-100 focus-visible:outline-4 focus-visible:outline-primary"
+          >
+            <Icon name="gear" className="size-6" />
+          </Link>
         </div>
       </header>
 

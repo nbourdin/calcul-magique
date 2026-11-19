@@ -58,6 +58,24 @@ describe('session de jeu', () => {
     expect((await listFactStates('p1')).every((s) => s.box >= 1)).toBe(true);
   });
 
+  it('mode chrono : étoile bonus si rapide', async () => {
+    await useSession.getState().start({
+      profileId: 'p1',
+      catalogIds: ['fee'],
+      skillId: 'C10',
+      gameId: 'house10',
+      level: 1,
+      chronoMode: 'soft',
+      rng: createRng(1),
+      now: () => NOW,
+    });
+    await play(() => true);
+    const { result } = useSession.getState();
+    expect(result?.series).toMatchObject({ mode: 'chrono', bonusStars: 1 });
+    expect(result?.outcome?.starsGained).toBe(4);
+    expect(result?.minutesToday).toBe(0);
+  });
+
   it('3 erreurs : 3 secondes chances, 13 tentatives, 2 étoiles', async () => {
     await startSeries();
     await play((attempt, i) => attempt === 2 || i >= 3);

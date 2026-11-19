@@ -145,6 +145,19 @@ body {
   animation: shake 350ms ease-in-out;
 }
 
+/* Sablier du mode chrono : se remplit en 4 s, puis reste plein (aucune limite). */
+@keyframes chrono-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.chrono-fill {
+  animation: chrono-fill 4s linear forwards;
+}
+
 /* Bulles qui flottent doucement : toutes restent visibles, aucune ne se perd. */
 @keyframes float {
   0%,
