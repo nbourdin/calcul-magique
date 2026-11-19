@@ -1,7 +1,8 @@
 # Calcul Magique
 
 PWA de mini-jeux de calcul mental pour une élève de CE1. La spécification complète est dans
-[PRD-calcul-mental-ce1.md](PRD-calcul-mental-ce1.md) : la relire avant chaque jalon.
+[PRD-calcul-mental-ce1.md](PRD-calcul-mental-ce1.md) : la relire avant chaque jalon. Ce qui reste à faire
+est dans [TODO.md](TODO.md).
 
 ## Stack
 
@@ -37,7 +38,17 @@ La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et 
 ## Astuces de dev
 
 - `#/jouer/C10?niveau=2&jeu=bubbles` force le niveau et le jeu (sinon : niveau de la compétence ou
-  `startLevel`, et premier jeu de `SKILL_GAMES`). `#/competence/P9?revoir=1` rejoue « Je découvre ».
+  `startLevel`, et premier jeu de `SKILL_GAMES`) ; un niveau forcé ne déclenche aucun conseil de niveau.
+  `#/competence/P9?revoir=1` rejoue « Je découvre ». `#/defi` : défi du jour (une fois par jour).
+- Progression (adoucie par rapport au PRD §4) : 7 mondes dans `src/domain/worlds.ts`, du plus simple
+  (`ADS` plus et moins ≤ 10) au calcul posé (`APO`, `SPO`) puis aux tables. Chaque niveau d'une compétence
+  ne demande qu'une marche de plus ; « Je découvre » a un exemple et une phrase par niveau
+  (`DEMO_FACTS` dans `Discover.tsx`, `fr.discover.intro`) et revient quand un nouveau niveau est atteint.
+- Niveaux en jeu : `levelAdvice` (`domain/engine/progression.ts`) propose de monter en fin de série
+  (jamais imposé) ou redescend après 2 séries difficiles ; seules les séries jouées depuis
+  `SkillProgress.levelSince` comptent.
+- Calcul posé : `src/domain/column.ts` (colonnes, retenues, emprunts) ; jeu « Le Petit Train »
+  (`src/games/train`), saisie des unités vers la gauche (`entry.ts`).
 - Jeux compatibles par compétence : `SKILL_GAMES` dans `src/games/index.ts`. Tout nouveau jeu doit passer
   `src/games/contract.test.tsx` (10 questions par compétence et niveau, `onAnswer` à chaque réponse).
 - Données : IndexedDB `calcul-magique` (profils, états des faits, tentatives, séries, puzzles, récompenses) ;
@@ -46,6 +57,8 @@ La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et 
 - Export/import (`src/data/backup.ts`) : le fichier porte `schemaVersion`. Un import plus récent que l'app est
   refusé ; un import plus ancien est accepté (tables absentes = vides). Toute nouvelle table liée à un profil
   doit être ajoutée à l'export, à l'import, à la réinitialisation et au test d'aller-retour.
+  Un champ non indexé (ex. `SkillProgress.discoveredLevel`, `Series.level`) ne demande pas de migration.
+- Médailles : `src/domain/rewards/medals.ts`, attribuées dans `finishSeries` (`rewards.badges`).
 - Espace parent : engrenage de l'accueil → `#/parent` (multiplication des tables 6 à 9).
 - Personnages : `src/assets/characters/<id>.svg` (carré 300×300) + `<id>.json` ; le catalogue les découvre seul.
 - L'horloge passe par `now()` de `src/app/clock.ts` (la règle React « purity » refuse `Date.now()` dans les
