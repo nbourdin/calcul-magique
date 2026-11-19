@@ -5,9 +5,9 @@ PWA de mini-jeux de calcul mental pour une élève de CE1. La spécification com
 
 ## Stack
 
-Vite + React 18 + TypeScript strict · React Router (hash) · Tailwind CSS v4 (thème en variables CSS dans
+Vite + React 18 + TypeScript strict · React Router (hash) · Zustand · Dexie (IndexedDB) · Tailwind CSS v4 (thème en variables CSS dans
 `src/app/theme.css`) · vite-plugin-pwa (Workbox, précache de tout) · Vitest + Testing Library.
-À ajouter quand le jalon en a besoin : Zustand, Dexie, Framer Motion, Howler, Playwright.
+À ajouter quand le jalon en a besoin : Framer Motion, Howler, Playwright.
 
 TypeScript est épinglé en `~6.0` : typescript-eslint ne supporte pas encore TS 7.
 
@@ -27,10 +27,18 @@ La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et 
   ESLint le fait respecter. Générateurs = fonctions pures `(skillId, difficulty, rng) → Question`, rng injectable.
 - **Aucune chaîne en dur dans les composants** : tout texte affiché vient de `src/i18n/fr.ts`.
   Côté enfant : 8 mots maximum, tutoiement, ton encourageant.
-- Les jeux ne connaissent que `Question` et `onAnswer` / `onComplete` ; ils n'accèdent jamais à la base.
+- Les jeux (`src/games/`) reçoivent une question à la fois (`GameProps` : `question`, `attempt`, `active`,
+  `onAnswer(correct, responseMs)`) et n'accèdent jamais à la base. Le lecteur de série
+  (`src/features/play/`) gère la seconde chance, l'aide, la fin de série et l'enregistrement.
 - Toutes les écritures en base passent par les repositories de `src/data/`.
 - Aucun contenu externe à l'exécution (polices, sons, images embarqués). Aucun tracking.
 - Import avec l'alias `@/` (→ `src/`).
+
+## Astuces de dev
+
+- `#/jouer/C10?niveau=2` force le niveau de présentation (sinon : réglage `startLevel` du profil).
+- Données : IndexedDB `calcul-magique` (profils, états des faits, tentatives, séries) ; profil actif dans
+  `localStorage`.
 
 ## UI
 

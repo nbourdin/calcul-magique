@@ -3,9 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { registerSW } from 'virtual:pwa-register';
 import { router } from '@/app/router';
+import { requestPersistentStorage } from '@/data/storage';
 import '@/app/theme.css';
 
 registerSW({ immediate: true });
+void requestPersistentStorage();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root introuvable');
