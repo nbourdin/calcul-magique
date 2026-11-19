@@ -41,22 +41,36 @@ export function setActiveProfileId(id: string): void {
   }
 }
 
+/** 2 à 4 profils sur le même appareil (PRD §2). */
+export const MAX_PROFILES = 4;
+
 /**
- * Profil actif, ou à défaut le premier profil existant, ou un profil créé.
- * En attendant l'onboarding, le profil créé n'a pas de prénom.
+ * Profil actif, ou à défaut le premier profil existant. `undefined` au premier lancement :
+ * l'app envoie alors vers l'onboarding.
  */
-export async function ensureActiveProfile(now: number): Promise<Profile> {
+export async function getActiveProfile(): Promise<Profile | undefined> {
   const activeId = getActiveProfileId();
-  // Transaction en écriture : deux appels simultanés (premier lancement, StrictMode)
-  // sont sérialisés par IndexedDB et ne créent qu'un seul profil.
-  const profile = await db.transaction(
-    'rw',
-    db.profiles,
-    async () =>
-      (activeId ? await db.profiles.get(activeId) : undefined) ??
-      (await db.profiles.toCollection().first()) ??
-      (await createProfile({ name: '', avatar: 'star' }, now)),
-  );
+  const profile =
+    (activeId ? await db.profiles.get(activeId) : undefined) ?? (await db.profiles.toCollection().first());
+  if (profile && profile.id !== activeId) setActiveProfileId(profile.id);
+  return profile;
+}
+
+/**
+ * Crée un profil depuis l'onboarding. Un profil sans prénom (créé automatiquement avant
+ * l'onboarding) est complété plutôt que doublé. La transaction sérialise deux envois rapides.
+ */
+export async function saveNewProfile(input: { name: string; avatar: string }, now: number): Promise<Profile> {
+  const profile = await db.transaction('rw', db.profiles, async () => {
+    const unnamed = await db.profiles.filter((p) => p.name === '').first();
+    if (unnamed) {
+      const updated = { ...unnamed, ...input };
+      await db.profiles.put(updated);
+      return updated;
+    }
+    if ((await db.profiles.count()) >= MAX_PROFILES) throw new Error('Nombre maximal de profils atteint');
+    return createProfile(input, now);
+  });
   setActiveProfileId(profile.id);
   return profile;
 }

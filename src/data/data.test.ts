@@ -3,7 +3,14 @@ import { createRng } from '@/domain/rng';
 import { generateQuestion } from '@/domain/skills';
 import type { Series } from '@/domain/types';
 import { db } from './db';
-import { createProfile, ensureActiveProfile, getActiveProfileId, listProfiles } from './profiles';
+import {
+  createProfile,
+  getActiveProfile,
+  getActiveProfileId,
+  listProfiles,
+  MAX_PROFILES,
+  saveNewProfile,
+} from './profiles';
 import {
   countNewFactsToday,
   listAttemptsOfSeries,
@@ -30,24 +37,38 @@ beforeEach(async () => {
 });
 
 describe('profils', () => {
-  it('crée un profil par défaut au premier lancement puis le retrouve', async () => {
-    const first = await ensureActiveProfile(NOW);
-    expect(first.settings.startLevel).toBe(1);
-    expect(getActiveProfileId()).toBe(first.id);
-    expect((await ensureActiveProfile(NOW + 1)).id).toBe(first.id);
-    expect(await listProfiles()).toHaveLength(1);
+  it('aucun profil au premier lancement', async () => {
+    expect(await getActiveProfile()).toBeUndefined();
   });
 
-  it('deux appels simultanés au premier lancement ne créent qu’un profil', async () => {
-    const [a, b] = await Promise.all([ensureActiveProfile(NOW), ensureActiveProfile(NOW)]);
-    expect(a.id).toBe(b.id);
-    expect(await listProfiles()).toHaveLength(1);
+  it('l’onboarding crée le profil et le rend actif', async () => {
+    const lila = await saveNewProfile({ name: 'Lila', avatar: 'moon' }, NOW);
+    expect(lila.settings.startLevel).toBe(1);
+    expect(getActiveProfileId()).toBe(lila.id);
+    expect((await getActiveProfile())?.name).toBe('Lila');
+  });
+
+  it('complète un profil sans prénom au lieu d’en créer un second', async () => {
+    const auto = await createProfile({ name: '', avatar: 'star' }, NOW);
+    const [a, b] = await Promise.all([
+      saveNewProfile({ name: 'Lila', avatar: 'moon' }, NOW),
+      saveNewProfile({ name: 'Lila', avatar: 'moon' }, NOW),
+    ]);
+    expect(a.id).toBe(auto.id);
+    expect(b.id).not.toBe(auto.id);
+    expect((await listProfiles()).map((p) => p.name)).toEqual(expect.arrayContaining(['Lila', 'Lila']));
+  });
+
+  it('limite le nombre de profils', async () => {
+    for (let i = 0; i < MAX_PROFILES; i++) await saveNewProfile({ name: `E${i}`, avatar: 'star' }, NOW);
+    await expect(saveNewProfile({ name: 'Trop', avatar: 'star' }, NOW)).rejects.toThrow();
   });
 
   it('reprend un profil existant si le profil actif a disparu', async () => {
     const lila = await createProfile({ name: 'Lila', avatar: 'unicorn' }, NOW);
     store.set('calcul-magique.activeProfile', 'inconnu');
-    expect((await ensureActiveProfile(NOW)).id).toBe(lila.id);
+    expect((await getActiveProfile())?.id).toBe(lila.id);
+    expect(getActiveProfileId()).toBe(lila.id);
   });
 
   it('fonctionne sans localStorage', async () => {
@@ -59,8 +80,8 @@ describe('profils', () => {
         throw new Error('bloqué');
       },
     });
-    const p = await ensureActiveProfile(NOW);
-    expect(p.id).toBeTruthy();
+    const p = await saveNewProfile({ name: 'Lila', avatar: 'moon' }, NOW);
+    expect((await getActiveProfile())?.id).toBe(p.id);
     vi.stubGlobal('localStorage', {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => void store.set(k, v),
