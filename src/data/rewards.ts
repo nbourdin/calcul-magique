@@ -7,6 +7,7 @@ import {
   type SeriesRewardOutcome,
 } from '@/domain/rewards/seriesRewards';
 import { isThemeUnlocked, type ThemeId } from '@/domain/rewards/themes';
+import { minutesOnDay } from '@/domain/parent/dashboard';
 import { dayKey, startOfLocalDayPlus } from '@/domain/time';
 import type { Series } from '@/domain/types';
 import { db } from './db';
@@ -61,6 +62,8 @@ export interface FinishedSeries {
   outcome: SeriesRewardOutcome;
   /** Séries terminées aujourd'hui, celle-ci comprise (message « à demain »). */
   seriesToday: number;
+  /** Minutes jouées aujourd'hui, celle-ci comprise (durée recommandée par le parent). */
+  minutesToday: number;
 }
 
 /**
@@ -91,6 +94,14 @@ export async function finishSeries(
     const applied = applySeriesRewards({ reward, activePuzzle, series, today: dayKey(now), now });
     await db.rewards.put(applied.reward);
     if (applied.puzzle) await db.puzzles.put(applied.puzzle);
-    return { outcome: applied.outcome, seriesToday: await countSeriesToday(profileId, now) };
+    const today = await db.series
+      .where('[profileId+endedAt]')
+      .between([profileId, startOfLocalDayPlus(now, 0)], [profileId, Infinity])
+      .toArray();
+    return {
+      outcome: applied.outcome,
+      seriesToday: today.length,
+      minutesToday: minutesOnDay(today, dayKey(now)),
+    };
   });
 }

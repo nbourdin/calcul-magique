@@ -1,5 +1,5 @@
-import { DEFAULT_SETTINGS } from '@/domain/settings';
-import type { Profile } from '@/domain/types';
+import { DEFAULT_SETTINGS, withDefaultSettings } from '@/domain/settings';
+import type { Profile, Settings } from '@/domain/types';
 import { db, newId } from './db';
 
 /** Seul usage de localStorage : l'identifiant du profil actif (PRD §3). */
@@ -17,12 +17,28 @@ export async function createProfile(input: { name: string; avatar: string }, now
   return profile;
 }
 
-export function getProfile(id: string): Promise<Profile | undefined> {
-  return db.profiles.get(id);
+/** Réglages complétés par les valeurs par défaut (profils créés par une version plus ancienne). */
+function normalize(profile: Profile): Profile {
+  return { ...profile, settings: withDefaultSettings(profile.settings) };
 }
 
-export function listProfiles(): Promise<Profile[]> {
-  return db.profiles.orderBy('id').toArray();
+export async function getProfile(id: string): Promise<Profile | undefined> {
+  const profile = await db.profiles.get(id);
+  return profile && normalize(profile);
+}
+
+export async function updateSettings(profileId: string, patch: Partial<Settings>): Promise<Profile> {
+  return db.transaction('rw', db.profiles, async () => {
+    const profile = await db.profiles.get(profileId);
+    if (!profile) throw new Error(`Profil inconnu : ${profileId}`);
+    const updated = { ...profile, settings: { ...withDefaultSettings(profile.settings), ...patch } };
+    await db.profiles.put(updated);
+    return updated;
+  });
+}
+
+export async function listProfiles(): Promise<Profile[]> {
+  return (await db.profiles.orderBy('id').toArray()).map(normalize);
 }
 
 export function getActiveProfileId(): string | null {
@@ -53,7 +69,7 @@ export async function getActiveProfile(): Promise<Profile | undefined> {
   const profile =
     (activeId ? await db.profiles.get(activeId) : undefined) ?? (await db.profiles.toCollection().first());
   if (profile && profile.id !== activeId) setActiveProfileId(profile.id);
-  return profile;
+  return profile && normalize(profile);
 }
 
 /**
