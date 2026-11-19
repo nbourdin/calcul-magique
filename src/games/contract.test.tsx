@@ -42,7 +42,7 @@ const answerWith: Record<GameId, (q: Question, value: number) => void> = {
         left -= coin;
       }
     }
-    fireEvent.click(screen.getByRole('button', { name: fr.numpad.submit }));
+    fireEvent.click(screen.getByRole('button', { name: fr.games.shop.submit }));
   },
 };
 
