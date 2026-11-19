@@ -61,7 +61,10 @@ export function applyAnswer(
   now: number,
   policy: WrongAnswerPolicy = 'reset',
 ): FactState {
-  const box = nextBox(state.box, outcome, policy);
+  // Répétition espacée : revoir un fait avant son échéance ne le fait pas monter
+  // (sinon 10 séries le même jour suffiraient à le « maîtriser »). Une erreur compte toujours.
+  const promoted = nextBox(state.box, outcome, policy);
+  const box = outcome.correct && !isDue(state, now) ? state.box : promoted;
   const seenCount = state.seenCount + 1;
   const firstTry = outcome.correct && !outcome.usedHelp;
   let consecutiveCorrect = state.consecutiveCorrect;

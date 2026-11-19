@@ -103,6 +103,27 @@ describe('applyAnswer', () => {
     expect(s).toMatchObject({ box: 2, consecutiveCorrect: 2, correctFirstTry: 1 });
   });
 
+  it('revu avant son échéance, un fait ne monte pas (mais une erreur le fait redescendre)', () => {
+    const early = state({ box: 2, dueAt: NOW + 1000, consecutiveCorrect: 1 });
+    expect(applyAnswer(early, fast, NOW)).toMatchObject({
+      box: 2,
+      consecutiveCorrect: 2,
+      dueAt: dueAtFor(2, NOW),
+    });
+    expect(applyAnswer(early, wrong, NOW).box).toBe(0);
+  });
+
+  it('il faut des jours différents pour atteindre la boîte 3', () => {
+    let s = state();
+    s = applyAnswer(s, fast, NOW); // boîte 1, dû demain
+    s = applyAnswer(s, fast, NOW + 60_000); // même séance : reste en boîte 1
+    expect(s.box).toBe(1);
+    s = applyAnswer(s, fast, s.dueAt); // le lendemain : boîte 2
+    s = applyAnswer(s, fast, s.dueAt); // 3 jours plus tard : boîte 3
+    expect(s.box).toBe(3);
+    expect(isMastered(s)).toBe(true);
+  });
+
   it('applique la politique « −2 »', () => {
     expect(applyAnswer(state({ box: 4 }), wrong, NOW, 'drop2').box).toBe(2);
   });
@@ -127,9 +148,9 @@ describe('isDue et isMastered', () => {
     expect(isMastered(state({ box: 4, consecutiveCorrect: 2 }))).toBe(false);
   });
 
-  it('il faut 3 réponses rapides pour atteindre la boîte 3 maîtrisée', () => {
+  it('3 réponses rapides, chacune à échéance, mènent à la boîte 3 maîtrisée', () => {
     let s = state();
-    for (let i = 0; i < 3; i++) s = applyAnswer(s, fast, NOW);
+    for (let i = 0; i < 3; i++) s = applyAnswer(s, fast, Math.max(NOW, s.dueAt));
     expect(isMastered(s)).toBe(true);
   });
 });
