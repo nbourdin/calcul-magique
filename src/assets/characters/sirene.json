@@ -1,0 +1,8 @@
+{
+  "id": "sirene",
+  "order": 4,
+  "name": "Marine",
+  "title": "la sirène des vagues",
+  "color": "#3fb3b0",
+  "greeting": "Je suis Marine, la sirène des vagues !"
+}
