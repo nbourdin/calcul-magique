@@ -163,7 +163,7 @@ describe('registre et faits', () => {
   });
 
   it('refuse une compétence non implémentée', () => {
-    expect(() => getSkill('TAD')).toThrow(/non implémentée/);
+    expect(() => getSkill('XYZ' as SkillId)).toThrow(/non implémentée/);
   });
 
   it.each([

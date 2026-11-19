@@ -31,6 +31,8 @@ export interface Question {
   answer: number;
   /** 3 propositions uniques, positives, dont la bonne. */
   choices?: number[];
+  /** Formulation en mots plutôt qu'en opération : « Double de 8 », « Moitié de 16 ». */
+  wording?: 'double' | 'half';
   strategy?: { steps: string[]; visual: StrategyVisual };
 }
 

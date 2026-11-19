@@ -143,14 +143,14 @@ describe('composeSeries — quotas', () => {
   it('ignore les faits jamais vus et les compétences non implémentées', () => {
     const states = [
       { ...fact('p9:10', 'P9', 0, NOW - DAY), seenCount: 0 },
-      fact('tad:8+5', 'TAD', 0, NOW - DAY),
+      fact('zz:1', 'XYZ' as SkillId, 0, NOW - DAY),
     ];
-    const { questions } = compose({ states, reviewSkills: ['P9', 'TAD'] });
-    expect(questions.some((q) => q.skillId === 'TAD')).toBe(false);
+    const { questions } = compose({ states, reviewSkills: ['P9', 'XYZ' as SkillId] });
+    expect(questions.some((q) => q.skillId === ('XYZ' as SkillId))).toBe(false);
   });
 
   it('refuse une compétence non implémentée', () => {
-    expect(() => compose({ skillId: 'TAD' })).toThrow();
+    expect(() => compose({ skillId: 'XYZ' as SkillId })).toThrow();
   });
 
   it('est reproductible à graine égale', () => {
