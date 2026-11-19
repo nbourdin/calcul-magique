@@ -43,6 +43,10 @@ La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et 
 - Données : IndexedDB `calcul-magique` (profils, états des faits, tentatives, séries, puzzles, récompenses) ;
   profil actif dans `localStorage`. Schéma versionné dans `src/data/db.ts` : ajouter une `version(n)` par
   migration, ne jamais modifier une version publiée.
+- Export/import (`src/data/backup.ts`) : le fichier porte `schemaVersion`. Un import plus récent que l'app est
+  refusé ; un import plus ancien est accepté (tables absentes = vides). Toute nouvelle table liée à un profil
+  doit être ajoutée à l'export, à l'import, à la réinitialisation et au test d'aller-retour.
+- Espace parent : engrenage de l'accueil → `#/parent` (multiplication des tables 6 à 9).
 - Personnages : `src/assets/characters/<id>.svg` (carré 300×300) + `<id>.json` ; le catalogue les découvre seul.
 - L'horloge passe par `now()` de `src/app/clock.ts` (la règle React « purity » refuse `Date.now()` dans les
   composants).

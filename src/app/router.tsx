@@ -6,6 +6,7 @@ import { AlbumScreen } from '@/features/album/AlbumScreen';
 import { CharacterScreen } from '@/features/album/CharacterScreen';
 import { HomeScreen } from '@/features/home/HomeScreen';
 import { OnboardingScreen } from '@/features/onboarding/OnboardingScreen';
+import { ParentScreen } from '@/features/parent/ParentScreen';
 import { SeriesScreen } from '@/features/play/SeriesScreen';
 import { ProfilesScreen } from '@/features/profile/ProfilesScreen';
 import { RequireProfile } from '@/features/profile/RequireProfile';
@@ -32,6 +33,7 @@ export const routes = [
       { path: 'choisir', element: child(<ChooseScreen />) },
       { path: 'album', element: child(<AlbumScreen />) },
       { path: 'album/:characterId', element: child(<CharacterScreen />) },
+      { path: 'parent', element: child(<ParentScreen />) },
     ],
   },
 ];
