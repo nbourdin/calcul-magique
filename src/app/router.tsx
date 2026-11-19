@@ -10,6 +10,7 @@ import { SeriesScreen } from '@/features/play/SeriesScreen';
 import { ProfilesScreen } from '@/features/profile/ProfilesScreen';
 import { RequireProfile } from '@/features/profile/RequireProfile';
 import { ChooseScreen } from '@/features/rewards/ChooseScreen';
+import { SkillScreen } from '@/features/skill/SkillScreen';
 
 const child = (element: ReactNode) => <RequireProfile>{element}</RequireProfile>;
 
@@ -26,6 +27,7 @@ export const routes = [
       { index: true, element: child(<HomeScreen />) },
       { path: 'bienvenue', element: <OnboardingScreen /> },
       { path: 'profils', element: <ProfilesScreen /> },
+      { path: 'competence/:skillId', element: child(<SkillScreen />) },
       { path: 'jouer/:skillId', element: child(<SeriesScreen />) },
       { path: 'choisir', element: child(<ChooseScreen />) },
       { path: 'album', element: child(<AlbumScreen />) },

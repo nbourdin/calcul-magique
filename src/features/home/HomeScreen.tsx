@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getCharacter } from '@/assets/characters';
 import { placedPieces, PUZZLE_PIECES } from '@/domain/rewards/puzzle';
-import type { SkillId } from '@/domain/types';
+import { unlockedWorlds, WORLDS } from '@/domain/worlds';
 import { useProfile } from '@/features/profile/profileStore';
 import { Flame, StarCount } from '@/features/rewards/Badges';
 import { Puzzle } from '@/features/rewards/Puzzle';
@@ -9,12 +9,12 @@ import { fr } from '@/i18n/fr';
 import { Avatar } from '@/ui/Avatar';
 import { buttonClass } from '@/ui/buttonClass';
 
-/** Monde 1 en attendant la carte des mondes. */
-const FOREST: readonly SkillId[] = ['C10', 'C20', 'CDS'];
+const WORLD_TONE = ['bg-mint', 'bg-sky', 'bg-rose', 'bg-[#fff1c9]', 'bg-primary-soft'];
 
 export function HomeScreen() {
-  const { profile, rewards, puzzles } = useProfile();
+  const { profile, rewards, puzzles, facts } = useProfile();
   if (!profile || !rewards) return null;
+  const open = unlockedWorlds(facts);
   const active = rewards.activeCharacterId ? getCharacter(rewards.activeCharacterId) : undefined;
   const activeProgress = puzzles.find((p) => p.characterId === rewards.activeCharacterId);
   const placed = activeProgress ? placedPieces(activeProgress) : [];
@@ -58,14 +58,35 @@ export function HomeScreen() {
           </Link>
         </section>
 
-        <section className="flex flex-col gap-4 rounded-3xl bg-mint p-5">
-          <h2 className="text-center text-2xl font-extrabold">{fr.home.forest}</h2>
-          {FOREST.map((skillId) => (
-            <Link key={skillId} to={`/jouer/${skillId}`} className={buttonClass()}>
-              {fr.skills[skillId]}
-            </Link>
-          ))}
-        </section>
+        <nav aria-label={fr.home.map} className="flex flex-col gap-4">
+          {WORLDS.map((world, i) => {
+            const unlocked = open.includes(world.id);
+            return (
+              <section
+                key={world.id}
+                aria-label={unlocked ? fr.worlds[world.id] : fr.worlds.lockedLabel(fr.worlds[world.id])}
+                className={`flex flex-col gap-3 rounded-3xl p-4 ${WORLD_TONE[i]} ${unlocked ? '' : 'opacity-60'}`}
+              >
+                <h2 className="text-xl font-extrabold">{fr.worlds[world.id]}</h2>
+                {unlocked ? (
+                  <div className="flex flex-wrap gap-3">
+                    {world.skills.map((skillId) => (
+                      <Link
+                        key={skillId}
+                        to={`/competence/${skillId}`}
+                        className={`${buttonClass()} grow basis-44 px-5 text-xl leading-tight`}
+                      >
+                        {fr.skills[skillId]}
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-lg font-bold text-ink-soft">{fr.worlds.locked}</p>
+                )}
+              </section>
+            );
+          })}
+        </nav>
       </div>
     </main>
   );

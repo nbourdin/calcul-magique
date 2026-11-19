@@ -5,7 +5,7 @@ import { isSkillAvailable } from '@/domain/skills';
 import type { Level, SkillId } from '@/domain/types';
 import { CHARACTER_IDS } from '@/assets/characters';
 import { useProfile } from '@/features/profile/profileStore';
-import { gamesForSkill } from '@/games';
+import { gamesForSkill, isGameId } from '@/games';
 import { fr } from '@/i18n/fr';
 import { Icon } from '@/ui/Icon';
 import { EndScreen } from './EndScreen';
@@ -23,12 +23,17 @@ export function SeriesScreen() {
   const { skillId: rawSkill = '' } = useParams();
   const [search] = useSearchParams();
   const skillId = rawSkill as SkillId;
-  const game = isSkillAvailable(skillId) ? gamesForSkill(skillId)[0] : undefined;
+  const compatible = isSkillAvailable(skillId) ? gamesForSkill(skillId) : [];
+  const wanted = search.get('jeu') ?? '';
+  const game = compatible.find((g) => isGameId(wanted) && g.id === wanted) ?? compatible[0];
   const forcedLevel = parseLevel(search.get('niveau'));
 
   const { status, run, result, start, answer, next, reset } = useSession();
   const profileId = useProfile((s) => s.profile?.id);
-  const startLevel = useProfile((s) => s.profile?.settings.startLevel ?? 1);
+  // Niveau de la compétence pour ce profil, à défaut le niveau de départ réglé par le parent.
+  const startLevel = useProfile(
+    (s) => s.skills.find((p) => p.skillId === skillId)?.level ?? s.profile?.settings.startLevel ?? 1,
+  );
   const seriesBeforeBreak = useProfile((s) => s.profile?.settings.seriesBeforeBreak ?? 3);
   const reloadProfile = useProfile((s) => s.load);
 
@@ -130,6 +135,7 @@ export function SeriesScreen() {
         question={item.question}
         attempt={item.attempt}
         active={run.phase === 'question'}
+        progress={done / run.questionCount}
         onAnswer={(correct, ms) => void answer(correct, ms)}
       />
 

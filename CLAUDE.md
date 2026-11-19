@@ -36,7 +36,10 @@ La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et 
 
 ## Astuces de dev
 
-- `#/jouer/C10?niveau=2` force le niveau de présentation (sinon : réglage `startLevel` du profil).
+- `#/jouer/C10?niveau=2&jeu=bubbles` force le niveau et le jeu (sinon : niveau de la compétence ou
+  `startLevel`, et premier jeu de `SKILL_GAMES`). `#/competence/P9?revoir=1` rejoue « Je découvre ».
+- Jeux compatibles par compétence : `SKILL_GAMES` dans `src/games/index.ts`. Tout nouveau jeu doit passer
+  `src/games/contract.test.tsx` (10 questions par compétence et niveau, `onAnswer` à chaque réponse).
 - Données : IndexedDB `calcul-magique` (profils, états des faits, tentatives, séries, puzzles, récompenses) ;
   profil actif dans `localStorage`. Schéma versionné dans `src/data/db.ts` : ajouter une `version(n)` par
   migration, ne jamais modifier une version publiée.

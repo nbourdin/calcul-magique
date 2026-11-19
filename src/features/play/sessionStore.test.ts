@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { currentItem } from '@/domain/engine/run';
 import { createRng } from '@/domain/rng';
+import type { SkillId } from '@/domain/types';
 import { db } from '@/data/db';
 import { listAttemptsOfSeries, listFactStates, listRecentSeries } from '@/data/progress';
 import { useSession } from './sessionStore';
@@ -86,7 +87,7 @@ describe('session de jeu', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     await useSession
       .getState()
-      .start({ profileId: 'p1', catalogIds: [], skillId: 'TAD', gameId: 'house10', level: 1 });
+      .start({ profileId: 'p1', catalogIds: [], skillId: 'XYZ' as SkillId, gameId: 'house10', level: 1 });
     expect(useSession.getState().status).toBe('error');
   });
 });

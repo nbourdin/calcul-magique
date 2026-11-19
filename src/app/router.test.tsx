@@ -14,7 +14,14 @@ function renderAt(path: string) {
 
 beforeEach(async () => {
   localStorage.clear();
-  useProfile.setState({ status: 'loading', profile: null, rewards: null, puzzles: [] });
+  useProfile.setState({
+    status: 'loading',
+    profile: null,
+    rewards: null,
+    puzzles: [],
+    skills: [],
+    facts: [],
+  });
   await db.delete();
   await db.open();
 });
@@ -30,7 +37,8 @@ describe('parcours', () => {
     await user.click(await screen.findByRole('button', { name: fr.reveal.choose('Iris') }));
     expect(await screen.findByText(fr.home.welcomeName('Lila'))).toBeInTheDocument();
     expect(screen.getByText(fr.home.puzzleOf('Iris'))).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: fr.skills.C10 })).toHaveAttribute('href', '/jouer/C10');
+    expect(screen.getByRole('link', { name: fr.skills.C10 })).toHaveAttribute('href', '/competence/C10');
+    expect(screen.getByRole('region', { name: fr.worlds.lockedLabel(fr.worlds.river) })).toBeInTheDocument();
   });
 
   it("affiche l'écran d'erreur sur une route inconnue", async () => {
