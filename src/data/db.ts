@@ -1,10 +1,19 @@
 import Dexie, { type Table } from 'dexie';
 import type { PuzzleProgress } from '@/domain/rewards/puzzle';
 import type { RewardState } from '@/domain/rewards/seriesRewards';
-import type { Attempt, FactState, Profile, Series } from '@/domain/types';
+import type { Attempt, FactState, Level, Profile, Series, SkillId } from '@/domain/types';
+
+/** Niveau et découverte d'une compétence pour un profil. */
+export interface SkillProgress {
+  profileId: string;
+  skillId: SkillId;
+  level: Level;
+  /** Étape « Je découvre » vue (date), sinon absente. */
+  discoveredAt?: number;
+}
 
 /** Version du schéma : incrémentée à chaque migration, reprise dans l'export JSON. */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export class AppDb extends Dexie {
   // `declare` : ne pas écraser les tables que Dexie installe sur l'instance.
@@ -14,6 +23,7 @@ export class AppDb extends Dexie {
   declare series: Table<Series, string>;
   declare puzzles: Table<PuzzleProgress, [string, string]>;
   declare rewards: Table<RewardState, string>;
+  declare skillProgress: Table<SkillProgress, [string, string]>;
 
   constructor(name = 'calcul-magique') {
     super(name);
@@ -27,6 +37,9 @@ export class AppDb extends Dexie {
     this.version(2).stores({
       puzzles: '[profileId+characterId], profileId',
       rewards: 'profileId',
+    });
+    this.version(3).stores({
+      skillProgress: '[profileId+skillId], profileId',
     });
   }
 }

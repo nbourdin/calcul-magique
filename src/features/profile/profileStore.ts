@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import type { PuzzleProgress } from '@/domain/rewards/puzzle';
 import type { RewardState } from '@/domain/rewards/seriesRewards';
-import type { Profile } from '@/domain/types';
+import type { FactState, Profile } from '@/domain/types';
 import { getActiveProfile, setActiveProfileId } from '@/data/profiles';
+import { listFactStates } from '@/data/progress';
 import { getRewards, listPuzzles } from '@/data/rewards';
+import { listSkillProgress, type SkillProgress } from '@/data/skills';
 
 interface ProfileState {
   /** none : aucun profil, il faut passer par l'onboarding. */
@@ -11,6 +13,9 @@ interface ProfileState {
   profile: Profile | null;
   rewards: RewardState | null;
   puzzles: PuzzleProgress[];
+  skills: SkillProgress[];
+  /** États Leitner : servent à ouvrir les mondes. */
+  facts: FactState[];
   load: () => Promise<void>;
   select: (profileId: string) => Promise<void>;
 }
@@ -20,6 +25,8 @@ export const useProfile = create<ProfileState>()((set) => ({
   profile: null,
   rewards: null,
   puzzles: [],
+  skills: [],
+  facts: [],
   async load() {
     let profile: Profile | undefined;
     try {
@@ -29,11 +36,16 @@ export const useProfile = create<ProfileState>()((set) => ({
       console.error(error);
     }
     if (!profile) {
-      set({ status: 'none', profile: null, rewards: null, puzzles: [] });
+      set({ status: 'none', profile: null, rewards: null, puzzles: [], skills: [], facts: [] });
       return;
     }
-    const [rewards, puzzles] = await Promise.all([getRewards(profile.id), listPuzzles(profile.id)]);
-    set({ status: 'ready', profile, rewards, puzzles });
+    const [rewards, puzzles, skills, facts] = await Promise.all([
+      getRewards(profile.id),
+      listPuzzles(profile.id),
+      listSkillProgress(profile.id),
+      listFactStates(profile.id),
+    ]);
+    set({ status: 'ready', profile, rewards, puzzles, skills, facts });
   },
   async select(profileId) {
     setActiveProfileId(profileId);
