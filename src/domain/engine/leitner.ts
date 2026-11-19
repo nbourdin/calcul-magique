@@ -31,6 +31,7 @@ export function newFactState(profileId: string, factKey: string, skillId: SkillI
     correctFirstTry: 0,
     consecutiveCorrect: 0,
     avgMs: 0,
+    introducedAt: now,
   };
 }
 

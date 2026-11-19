@@ -34,6 +34,8 @@ export interface Question {
   strategy?: { steps: string[]; visual: StrategyVisual };
 }
 
+export type GameId = 'house10' | 'frog' | 'bubbles' | 'race' | 'shop';
+
 export type LeitnerBox = 0 | 1 | 2 | 3 | 4;
 
 export interface FactState {
@@ -46,4 +48,52 @@ export interface FactState {
   correctFirstTry: number;
   consecutiveCorrect: number;
   avgMs: number;
+  /** Première apparition du fait : sert à limiter les nouveaux faits par jour. */
+  introducedAt: number;
+}
+
+export interface Settings {
+  sessionMinutes: 5 | 10 | 15 | 20;
+  seriesBeforeBreak: number;
+  chronoMode: 'off' | 'soft' | 'on';
+  sound: boolean;
+  voice: boolean;
+  startLevel: Level;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  avatar: string;
+  createdAt: number;
+  settings: Settings;
+}
+
+export interface Attempt {
+  id: string;
+  profileId: string;
+  factKey: string;
+  skillId: SkillId;
+  gameId: GameId;
+  correctFirstTry: boolean;
+  responseMs: number;
+  usedHelp: boolean;
+  ts: number;
+  seriesId: string;
+}
+
+export type Stars = 1 | 2 | 3;
+
+export interface Series {
+  id: string;
+  profileId: string;
+  skillId: SkillId;
+  gameId: GameId;
+  startedAt: number;
+  endedAt: number;
+  stars: Stars;
+  mode: 'practice' | 'daily' | 'chrono';
+  /** Bonnes réponses du premier coup, sur `questionCount`. */
+  firstTryCorrect: number;
+  questionCount: number;
 }
