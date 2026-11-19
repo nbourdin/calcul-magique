@@ -38,6 +38,17 @@ describe('récompenses d’une série', () => {
     expect(r.outcome.newThemes).toEqual(['mint']);
   });
 
+  it('compte l’étoile bonus du mode chrono', () => {
+    const r = applySeriesRewards({
+      reward: emptyRewards('p1'),
+      activePuzzle: null,
+      series: { stars: 3, bonusStars: 1 },
+      today: '2026-11-19',
+      now: NOW,
+    });
+    expect(r.outcome).toMatchObject({ starsGained: 4, starsTotal: 4 });
+  });
+
   it('sans puzzle actif : étoiles et flamme, pas de pièce', () => {
     const r = applySeriesRewards({
       reward: emptyRewards('p1'),

@@ -8,4 +8,10 @@ export const DEFAULT_SETTINGS: Settings = {
   sound: true,
   voice: false,
   startLevel: 1,
+  unlockAll: false,
 };
+
+/** Complète des réglages enregistrés par une version plus ancienne de l'app. */
+export function withDefaultSettings(settings: Partial<Settings> | undefined): Settings {
+  return { ...DEFAULT_SETTINGS, ...settings };
+}

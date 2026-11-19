@@ -61,6 +61,8 @@ export interface Settings {
   sound: boolean;
   voice: boolean;
   startLevel: Level;
+  /** « Tout débloquer » : tous les mondes ouverts, sans attendre la maîtrise. */
+  unlockAll: boolean;
 }
 
 export interface Profile {
@@ -97,6 +99,8 @@ export interface Series {
   mode: 'practice' | 'daily' | 'chrono';
   /** Bonnes réponses du premier coup, sur `questionCount`. */
   firstTryCorrect: number;
+  /** Étoile bonus du mode chrono (0 ou 1), en plus des étoiles de la série. */
+  bonusStars?: number;
   questionCount: number;
 }
 

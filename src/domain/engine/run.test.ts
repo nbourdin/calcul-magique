@@ -24,6 +24,14 @@ describe('déroulé d’une série', () => {
     expect(firstTryCorrectCount(s)).toBe(3);
   });
 
+  it('garde les temps des bonnes réponses du premier coup', () => {
+    let s = advance(submitAnswer(startRun(questions), true, 1200));
+    s = advance(submitAnswer(s, false, 9000));
+    s = advance(submitAnswer(s, true, 800));
+    s = advance(submitAnswer(s, true, 3000)); // seconde chance : non comptée
+    expect(s.correctFirstTryMs).toEqual([1200, 800]);
+  });
+
   it('une erreur affiche l’aide et repose la question une fois en fin de série', () => {
     let s = submitAnswer(startRun(questions), false);
     expect(s.phase).toBe('help');

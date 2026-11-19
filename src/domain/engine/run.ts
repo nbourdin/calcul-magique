@@ -17,6 +17,8 @@ export interface RunState {
   phase: RunPhase;
   /** questionId → bonne réponse du premier coup. */
   firstTry: Record<string, boolean>;
+  /** Temps de réponse des bonnes réponses du premier coup (mode chrono). */
+  correctFirstTryMs: number[];
   questionCount: number;
 }
 
@@ -25,6 +27,7 @@ export function startRun(questions: readonly Question[]): RunState {
     queue: questions.map((question) => ({ question, attempt: 1 })),
     phase: questions.length === 0 ? 'done' : 'question',
     firstTry: {},
+    correctFirstTryMs: [],
     questionCount: questions.length,
   };
 }
@@ -34,7 +37,7 @@ export function currentItem(state: RunState): RunItem | undefined {
 }
 
 /** Enregistre la réponse à la question courante. */
-export function submitAnswer(state: RunState, correct: boolean): RunState {
+export function submitAnswer(state: RunState, correct: boolean, responseMs = 0): RunState {
   const item = currentItem(state);
   if (!item || state.phase !== 'question') return state;
   const isFirst = item.attempt === 1;
@@ -42,6 +45,8 @@ export function submitAnswer(state: RunState, correct: boolean): RunState {
     ...state,
     phase: correct ? 'success' : 'help',
     firstTry: isFirst ? { ...state.firstTry, [item.question.id]: correct } : state.firstTry,
+    correctFirstTryMs:
+      isFirst && correct ? [...state.correctFirstTryMs, responseMs] : state.correctFirstTryMs,
     // Seconde chance en fin de série, une seule fois.
     queue: !correct && isFirst ? [...state.queue, { question: item.question, attempt: 2 }] : state.queue,
   };

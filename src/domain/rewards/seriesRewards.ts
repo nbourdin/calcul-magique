@@ -60,12 +60,13 @@ export function chooseCharacter(
 export function applySeriesRewards(input: {
   reward: RewardState;
   activePuzzle: PuzzleProgress | null;
-  series: Pick<Series, 'stars'>;
+  series: Pick<Series, 'stars' | 'bonusStars'>;
   today: string;
   now: number;
 }): { reward: RewardState; puzzle: PuzzleProgress | null; outcome: SeriesRewardOutcome } {
   const { reward, activePuzzle, series, today, now } = input;
-  const starsTotal = reward.stars + series.stars;
+  const starsGained = series.stars + (series.bonusStars ?? 0);
+  const starsTotal = reward.stars + starsGained;
   const { streak, change } = recordPlayDay(reward.streak, today);
 
   let puzzle: PuzzleProgress | null = null;
@@ -87,7 +88,7 @@ export function applySeriesRewards(input: {
     reward: { ...reward, stars: starsTotal, streak, activeCharacterId },
     puzzle,
     outcome: {
-      starsGained: series.stars,
+      starsGained,
       starsTotal,
       newThemes: newlyUnlockedThemes(reward.stars, starsTotal),
       streak,
