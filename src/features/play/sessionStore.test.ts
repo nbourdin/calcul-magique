@@ -10,6 +10,7 @@ const NOW = new Date(2026, 10, 19, 17, 0).getTime();
 async function startSeries() {
   await useSession.getState().start({
     profileId: 'p1',
+    catalogIds: ['fee', 'licorne'],
     skillId: 'C10',
     gameId: 'house10',
     level: 1,
@@ -43,8 +44,15 @@ describe('session de jeu', () => {
     await play(() => true);
     const { status, result } = useSession.getState();
     expect(status).toBe('done');
-    expect(result).toMatchObject({ stars: 3, firstTryCorrect: 10, questionCount: 10, skillId: 'C10' });
-    expect(await listAttemptsOfSeries(result?.id ?? '')).toHaveLength(10);
+    expect(result?.series).toMatchObject({
+      stars: 3,
+      firstTryCorrect: 10,
+      questionCount: 10,
+      skillId: 'C10',
+    });
+    expect(result?.outcome?.piece).toMatchObject({ characterId: 'fee', piecesPlaced: 1 });
+    expect(result?.seriesToday).toBe(1);
+    expect(await listAttemptsOfSeries(result?.series.id ?? '')).toHaveLength(10);
     expect(await listRecentSeries('p1')).toHaveLength(1);
     expect((await listFactStates('p1')).every((s) => s.box >= 1)).toBe(true);
   });
@@ -53,8 +61,8 @@ describe('session de jeu', () => {
     await startSeries();
     await play((attempt, i) => attempt === 2 || i >= 3);
     const { result } = useSession.getState();
-    expect(result).toMatchObject({ stars: 2, firstTryCorrect: 7 });
-    const attempts = await listAttemptsOfSeries(result?.id ?? '');
+    expect(result?.series).toMatchObject({ stars: 2, firstTryCorrect: 7 });
+    const attempts = await listAttemptsOfSeries(result?.series.id ?? '');
     expect(attempts).toHaveLength(13);
     expect(attempts.filter((a) => a.usedHelp)).toHaveLength(3);
   });
@@ -76,7 +84,9 @@ describe('session de jeu', () => {
 
   it('passe en erreur si la compétence est inconnue', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    await useSession.getState().start({ profileId: 'p1', skillId: 'TAD', gameId: 'house10', level: 1 });
+    await useSession
+      .getState()
+      .start({ profileId: 'p1', catalogIds: [], skillId: 'TAD', gameId: 'house10', level: 1 });
     expect(useSession.getState().status).toBe('error');
   });
 });

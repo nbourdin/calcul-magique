@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { answeredCount, currentItem } from '@/domain/engine/run';
 import { isSkillAvailable } from '@/domain/skills';
 import type { Level, SkillId } from '@/domain/types';
-import { ensureActiveProfile } from '@/data/profiles';
+import { CHARACTER_IDS } from '@/assets/characters';
+import { useProfile } from '@/features/profile/profileStore';
 import { gamesForSkill } from '@/games';
 import { fr } from '@/i18n/fr';
 import { Icon } from '@/ui/Icon';
@@ -26,22 +27,31 @@ export function SeriesScreen() {
   const forcedLevel = parseLevel(search.get('niveau'));
 
   const { status, run, result, start, answer, next, reset } = useSession();
+  const profileId = useProfile((s) => s.profile?.id);
+  const startLevel = useProfile((s) => s.profile?.settings.startLevel ?? 1);
+  const seriesBeforeBreak = useProfile((s) => s.profile?.settings.seriesBeforeBreak ?? 3);
+  const reloadProfile = useProfile((s) => s.load);
 
   const begin = useCallback(async () => {
-    if (!game) return;
-    const profile = await ensureActiveProfile(Date.now());
+    if (!game || !profileId) return;
     await start({
-      profileId: profile.id,
+      profileId,
+      catalogIds: CHARACTER_IDS,
       skillId,
       gameId: game.id,
-      level: forcedLevel ?? profile.settings.startLevel,
+      level: forcedLevel ?? startLevel,
     });
-  }, [game, skillId, forcedLevel, start]);
+  }, [game, profileId, skillId, forcedLevel, startLevel, start]);
 
   useEffect(() => {
     void begin();
     return () => reset();
   }, [begin, reset]);
+
+  // Étoiles, flamme et puzzle ont changé : l'accueil doit les refléter.
+  useEffect(() => {
+    if (status === 'done') void reloadProfile();
+  }, [status, reloadProfile]);
 
   const phase = run?.phase;
   useEffect(() => {
@@ -63,7 +73,17 @@ export function SeriesScreen() {
     );
   }
 
-  if (status === 'done' && result) return <EndScreen series={result} onReplay={() => void begin()} />;
+  if (status === 'done' && result) {
+    return (
+      <EndScreen
+        key={result.series.id}
+        series={result.series}
+        outcome={result.outcome}
+        suggestBreak={result.seriesToday >= seriesBeforeBreak}
+        onReplay={() => void begin()}
+      />
+    );
+  }
 
   const item = run ? currentItem(run) : undefined;
   if (status !== 'playing' || !run || !item) {

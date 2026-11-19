@@ -12,12 +12,23 @@ import { starsForSeries } from '@/domain/rewards/stars';
 import { createRng, type Rng } from '@/domain/rng';
 import type { GameId, Level, Series, SkillId } from '@/domain/types';
 import { newId } from '@/data/db';
-import { countNewFactsToday, listFactStates, recordAnswer, saveSeries } from '@/data/progress';
+import { countNewFactsToday, listFactStates, recordAnswer } from '@/data/progress';
+import { finishSeries, type FinishedSeries } from '@/data/rewards';
+import type { SeriesRewardOutcome } from '@/domain/rewards/seriesRewards';
 
 type Status = 'idle' | 'loading' | 'playing' | 'done' | 'error';
 
+export interface SeriesResult {
+  series: Series;
+  /** null si l'enregistrement des récompenses a échoué. */
+  outcome: SeriesRewardOutcome | null;
+  seriesToday: number;
+}
+
 interface StartArgs {
   profileId: string;
+  /** Identifiants des personnages, dans l'ordre de l'album. */
+  catalogIds: readonly string[];
   skillId: SkillId;
   gameId: GameId;
   level: Level;
@@ -28,7 +39,7 @@ interface StartArgs {
 interface SessionState {
   status: Status;
   run: RunState | null;
-  result: Series | null;
+  result: SeriesResult | null;
   start: (args: StartArgs) => Promise<void>;
   answer: (correct: boolean, responseMs: number) => Promise<void>;
   next: () => Promise<void>;
@@ -37,6 +48,7 @@ interface SessionState {
 
 interface Context {
   profileId: string;
+  catalogIds: readonly string[];
   skillId: SkillId;
   gameId: GameId;
   seriesId: string;
@@ -53,7 +65,7 @@ export const useSession = create<SessionState>()((set, get) => ({
   run: null,
   result: null,
 
-  async start({ profileId, skillId, gameId, level, rng, now = Date.now }) {
+  async start({ profileId, catalogIds, skillId, gameId, level, rng, now = Date.now }) {
     const token = ++generation;
     context = null;
     set({ status: 'loading', run: null, result: null });
@@ -72,7 +84,7 @@ export const useSession = create<SessionState>()((set, get) => ({
         rng: rng ?? createRng(Math.floor(Math.random() * 2 ** 32)),
       });
       if (token !== generation) return;
-      context = { profileId, skillId, gameId, seriesId: newId(), startedAt: t, now };
+      context = { profileId, catalogIds, skillId, gameId, seriesId: newId(), startedAt: t, now };
       set({ status: 'playing', run: startRun(plan.questions) });
     } catch (error) {
       console.error(error);
@@ -127,12 +139,17 @@ export const useSession = create<SessionState>()((set, get) => ({
       questionCount: nextRun.questionCount,
     };
     context = null;
-    set({ run: nextRun, status: 'done', result: series });
+    set({ run: nextRun });
+    let finished: FinishedSeries | null = null;
     try {
-      await saveSeries(series);
+      finished = await finishSeries(series, ctx.catalogIds, series.endedAt);
     } catch (error) {
       console.error(error);
     }
+    set({
+      status: 'done',
+      result: { series, outcome: finished?.outcome ?? null, seriesToday: finished?.seriesToday ?? 1 },
+    });
   },
 
   reset() {

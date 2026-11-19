@@ -37,8 +37,12 @@ La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et 
 ## Astuces de dev
 
 - `#/jouer/C10?niveau=2` force le niveau de présentation (sinon : réglage `startLevel` du profil).
-- Données : IndexedDB `calcul-magique` (profils, états des faits, tentatives, séries) ; profil actif dans
-  `localStorage`.
+- Données : IndexedDB `calcul-magique` (profils, états des faits, tentatives, séries, puzzles, récompenses) ;
+  profil actif dans `localStorage`. Schéma versionné dans `src/data/db.ts` : ajouter une `version(n)` par
+  migration, ne jamais modifier une version publiée.
+- Personnages : `src/assets/characters/<id>.svg` (carré 300×300) + `<id>.json` ; le catalogue les découvre seul.
+- L'horloge passe par `now()` de `src/app/clock.ts` (la règle React « purity » refuse `Date.now()` dans les
+  composants).
 
 ## UI
 
