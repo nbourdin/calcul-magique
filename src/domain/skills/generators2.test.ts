@@ -39,19 +39,29 @@ describe('DBL — doubles et moitiés', () => {
       expect(q.display.a).toBeLessThanOrEqual(10);
       stepsAreCorrect(q);
     }));
-  it('niveau 2 : doubles jusqu’à 50', () =>
+  it('niveau 2 : moitiés des doubles déjà vus (pairs jusqu’à 20)', () =>
     draw('DBL', 2, (q) => {
-      expect(q.display.a).toBeGreaterThan(10);
-      expect(q.answer).toBeLessThanOrEqual(100);
-      stepsAreCorrect(q);
-    }));
-  it('niveau 3 : moitiés des pairs jusqu’à 100', () =>
-    draw('DBL', 3, (q) => {
       expect(q.wording).toBe('half');
       expect(evaluate(q.display) % 2).toBe(0);
-      expect(evaluate(q.display)).toBeLessThanOrEqual(100);
+      expect(evaluate(q.display)).toBeLessThanOrEqual(20);
       stepsAreCorrect(q);
     }));
+  it('niveau 3 : doubles jusqu’à 50, moitiés des dizaines paires', () =>
+    draw('DBL', 3, (q) => {
+      if (q.wording === 'double') {
+        expect(q.display.a).toBeGreaterThan(10);
+        expect(q.answer).toBeLessThanOrEqual(100);
+      } else {
+        expect(q.wording).toBe('half');
+        expect(evaluate(q.display) % 20).toBe(0);
+      }
+      stepsAreCorrect(q);
+    }));
+  it('chaque niveau s’appuie sur le précédent : moitiés des doubles du niveau 1', () => {
+    const doubles = factsFor('DBL', 1).map((f) => 2 * Number(f.slice(4)));
+    const halves = factsFor('DBL', 2).map((f) => Number(f.slice(5)));
+    expect(halves).toEqual(doubles);
+  });
   it('décompose les doubles en dizaines et unités', () => {
     expect(questionForFact('DBL', 'dbl:13', 2, createRng(1)).strategy?.steps).toEqual([
       '10 + 10 = 20',
@@ -86,11 +96,23 @@ describe('PDB — presque-doubles', () => {
 });
 
 describe('TAD — tables d’addition', () => {
-  it('niveau 1 : sommes jusqu’à 10', () =>
+  it('niveau 1 : dans la deuxième dizaine, sans la franchir', () =>
     draw('TAD', 1, (q) => {
-      expect(q.answer).toBeLessThanOrEqual(10);
+      expect(Math.floor(q.display.a / 10)).toBe(1);
+      expect(Math.floor(q.answer / 10)).toBe(1);
+      expect(q.display.b).toBeLessThanOrEqual(9);
       stepsAreCorrect(q);
     }));
+  it('niveau 1 : on calcule les unités, la dizaine reste', () => {
+    expect(questionForFact('TAD', 'tad:12+5', 1, createRng(1)).strategy?.steps).toEqual([
+      '2 + 5 = 7',
+      '10 + 7 = 17',
+    ]);
+    expect(questionForFact('TAD', 'tad:17-4', 1, createRng(1)).strategy?.steps).toEqual([
+      '7 − 4 = 3',
+      '10 + 3 = 13',
+    ]);
+  });
   it('niveau 2 : sommes de 11 à 20, passage de la dizaine', () =>
     draw('TAD', 2, (q) => {
       expect(q.answer).toBeGreaterThanOrEqual(11);
@@ -112,7 +134,7 @@ describe('TAD — tables d’addition', () => {
       '10 − 2 = 8',
     ]);
   });
-  it.each(['tad:11+1', 'tad:5-5', 'tad:21-3', 'tad:3*4'])('refuse %s', (f) => {
+  it.each(['tad:15+6', 'tad:5-5', 'tad:21-3', 'tad:3*4', 'tad:20+1'])('refuse %s', (f) => {
     expect(() => questionForFact('TAD', f, 1, createRng(1))).toThrow();
   });
 });

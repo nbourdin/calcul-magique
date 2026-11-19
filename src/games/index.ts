@@ -26,13 +26,19 @@ export const GAMES: Record<GameId, GameDefinition> = {
     id: 'shop',
     Component: lazy(() => import('./shop/ShopGame').then((m) => ({ default: m.ShopGame }))),
   },
+  train: {
+    id: 'train',
+    Component: lazy(() => import('./train/TrainGame').then((m) => ({ default: m.TrainGame }))),
+  },
 };
 
 /**
  * Jeux proposés par compétence (au moins 2, PRD §6) ; le premier est choisi par défaut.
- * La grenouille rend toute stratégie « en sauts » et la course toute question à 3 propositions.
+ * La grenouille rend toute stratégie « en sauts » et la course toute question à 3 propositions ;
+ * le petit train pose les additions et soustractions en colonnes.
  */
 export const SKILL_GAMES: Record<SkillId, readonly GameId[]> = {
+  ADS: ['frog', 'race'],
   C10: ['house10', 'bubbles', 'shop'],
   C20: ['house10', 'bubbles', 'shop'],
   CDS: ['house10', 'bubbles'],
@@ -42,6 +48,8 @@ export const SKILL_GAMES: Record<SkillId, readonly GameId[]> = {
   P9: ['frog', 'race'],
   M9: ['frog', 'race'],
   D10: ['frog', 'race'],
+  APO: ['train', 'race'],
+  SPO: ['train', 'race'],
   T2: ['race', 'frog'],
   T5: ['race', 'frog'],
   T10: ['race', 'frog'],

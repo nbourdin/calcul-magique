@@ -4,10 +4,12 @@ import { factArg, questionId, type SkillDefinition } from './skill';
 
 /**
  * DBL — Doubles et moitiés. `dbl:8` = double de 8, `dbl:h16` = moitié de 16.
- * Niveau 1 : doubles jusqu'à 10 ; 2 : doubles de 11 à 20 et des dizaines jusqu'à 50 ;
- * 3 : moitiés des nombres pairs jusqu'à 100.
+ * Progression douce : chaque niveau s'appuie sur le précédent.
+ * Niveau 1 : doubles jusqu'à 10 ; 2 : leurs moitiés (nombres pairs jusqu'à 20) ;
+ * 3 : doubles de 11 à 20 et des dizaines jusqu'à 50, moitiés des dizaines paires.
  */
-const LEVEL2 = [...range(11, 20), 25, 30, 40, 50];
+const LEVEL3_DOUBLES = [...range(11, 20), 25, 30, 40, 50];
+const LEVEL3_HALVES = [40, 60, 80, 100];
 
 function doubleSteps(n: number): string[] {
   if (n <= 10 || n % 10 === 0) return [`${n} + ${n} = ${2 * n}`];
@@ -36,8 +38,8 @@ export const dbl: SkillDefinition = {
   levels: [1, 2, 3],
   facts(level) {
     if (level === 1) return range(1, 10).map((n) => `dbl:${n}`);
-    if (level === 2) return LEVEL2.map((n) => `dbl:${n}`);
-    return range(1, 50).map((h) => `dbl:h${2 * h}`);
+    if (level === 2) return range(1, 10).map((h) => `dbl:h${2 * h}`);
+    return [...LEVEL3_DOUBLES.map((n) => `dbl:${n}`), ...LEVEL3_HALVES.map((m) => `dbl:h${m}`)];
   },
   question(factKey, level, rng) {
     const arg = factArg(factKey, 'dbl');

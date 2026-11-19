@@ -1,13 +1,29 @@
 /** Identifiants des compétences du référentiel (PRD §4). */
 export type SkillId =
-  'C10' | 'C20' | 'CDS' | 'DBL' | 'PDB' | 'TAD' | 'P9' | 'M9' | 'D10' | 'T2' | 'T5' | 'T10' | 'T3' | 'T4';
+  | 'ADS'
+  | 'C10'
+  | 'C20'
+  | 'CDS'
+  | 'DBL'
+  | 'PDB'
+  | 'TAD'
+  | 'P9'
+  | 'M9'
+  | 'D10'
+  | 'APO'
+  | 'SPO'
+  | 'T2'
+  | 'T5'
+  | 'T10'
+  | 'T3'
+  | 'T4';
 
 export type Level = 1 | 2 | 3;
 
 /** Opérateurs affichés (signes typographiques, pas le tiret ASCII). */
 export type Op = '+' | '−' | '×';
 
-export type StrategyVisual = 'numberline' | 'tenframe' | 'house10' | 'coins';
+export type StrategyVisual = 'numberline' | 'tenframe' | 'house10' | 'coins' | 'column';
 
 export interface QuestionDisplay {
   a: number;
@@ -36,7 +52,7 @@ export interface Question {
   strategy?: { steps: string[]; visual: StrategyVisual };
 }
 
-export type GameId = 'house10' | 'frog' | 'bubbles' | 'race' | 'shop';
+export type GameId = 'house10' | 'frog' | 'bubbles' | 'race' | 'shop' | 'train';
 
 export type LeitnerBox = 0 | 1 | 2 | 3 | 4;
 

@@ -15,7 +15,7 @@ describe('progression par compétence', () => {
     const all = await listSkillProgress('p1');
     expect(all).toEqual(
       expect.arrayContaining([
-        { profileId: 'p1', skillId: 'P9', level: 2, discoveredAt: 1000 },
+        { profileId: 'p1', skillId: 'P9', level: 2, discoveredAt: 1000, discoveredLevel: 1 },
         { profileId: 'p1', skillId: 'C10', level: 3 },
       ]),
     );

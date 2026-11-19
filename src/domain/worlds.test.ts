@@ -12,7 +12,7 @@ describe('mondes', () => {
   it('couvrent chaque compétence une seule fois', () => {
     const skills = WORLDS.flatMap((w) => w.skills);
     expect(new Set(skills).size).toBe(skills.length);
-    expect(skills).toHaveLength(14);
+    expect(skills).toHaveLength(17);
   });
 
   it('seule la forêt est ouverte au départ', () => {
@@ -20,8 +20,17 @@ describe('mondes', () => {
   });
 
   it('une compétence de la forêt maîtrisée à 60 % ouvre la rivière', () => {
-    expect(unlockedWorlds(mastered('CDS', 5))).toEqual(['forest']); // 5/9
-    expect(unlockedWorlds(mastered('CDS', 6))).toEqual(['forest', 'river']); // 6/9
+    expect(unlockedWorlds(mastered('C10', 6))).toEqual(['forest']); // 6/11
+    expect(unlockedWorlds(mastered('C10', 7))).toEqual(['forest', 'river']); // 7/11
+  });
+
+  it('commencent par les calculs les plus simples', () => {
+    expect(WORLDS[0].skills[0]).toBe('ADS');
+    expect(worldOfSkill('APO')).toBe('station');
+    // Le calcul posé vient après les dizaines, les tables en dernier.
+    const order = WORLDS.map((w) => w.id);
+    expect(order.indexOf('bridge')).toBeLessThan(order.indexOf('station'));
+    expect(order.at(-1)).toBe('castle');
   });
 
   it('les mondes s’ouvrent dans l’ordre', () => {
@@ -30,7 +39,7 @@ describe('mondes', () => {
   });
 
   it('le parent peut tout débloquer', () => {
-    expect(unlockedWorlds([], true)).toHaveLength(5);
+    expect(unlockedWorlds([], true)).toHaveLength(WORLDS.length);
   });
 
   it('retrouve le monde d’une compétence', () => {

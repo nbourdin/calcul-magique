@@ -10,6 +10,8 @@ export interface SkillProgress {
   level: Level;
   /** Étape « Je découvre » vue (date), sinon absente. */
   discoveredAt?: number;
+  /** Niveau montré lors de la dernière découverte : un nouveau niveau se redécouvre. */
+  discoveredLevel?: Level;
 }
 
 /** Version du schéma : incrémentée à chaque migration, reprise dans l'export JSON. */

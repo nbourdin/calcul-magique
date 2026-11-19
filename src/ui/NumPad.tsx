@@ -9,6 +9,11 @@ interface NumPadProps {
   onSubmit: () => void;
   maxLength?: number;
   disabled?: boolean;
+  /**
+   * Saisie pilotée par le jeu (calcul posé, case par case) : remplace la gestion de `value`.
+   * `canErase` et `canSubmit` règlent alors l'état des touches Effacer et Valider.
+   */
+  custom?: { onDigit: (d: number) => void; onErase: () => void; canErase: boolean; canSubmit: boolean };
 }
 
 const KEY =
@@ -18,14 +23,26 @@ const KEY =
  * Pavé numérique personnalisé (pas le clavier du système) : 0–9, effacer, valider.
  * Au clavier : chiffres, Retour arrière et Entrée.
  */
-export function NumPad({ value, onChange, onSubmit, maxLength = 3, disabled = false }: NumPadProps) {
+export function NumPad({ value, onChange, onSubmit, maxLength = 3, disabled = false, custom }: NumPadProps) {
+  const canErase = custom ? custom.canErase : value !== '';
+  const canSubmit = custom ? custom.canSubmit : value !== '';
   const type = (d: number) => {
-    if (disabled || value.length >= maxLength) return;
+    if (disabled) return;
+    if (custom) {
+      playSound('click');
+      custom.onDigit(d);
+      return;
+    }
+    if (value.length >= maxLength) return;
     playSound('click');
     onChange(value === '0' ? String(d) : value + d);
   };
-  const erase = () => !disabled && onChange(value.slice(0, -1));
-  const submit = () => !disabled && value !== '' && onSubmit();
+  const erase = () => {
+    if (disabled || !canErase) return;
+    if (custom) custom.onErase();
+    else onChange(value.slice(0, -1));
+  };
+  const submit = () => !disabled && canSubmit && onSubmit();
 
   useEffect(() => {
     if (disabled) return;
@@ -63,7 +80,7 @@ export function NumPad({ value, onChange, onSubmit, maxLength = 3, disabled = fa
         type="button"
         className={`${KEY} bg-help-soft text-ink`}
         onClick={erase}
-        disabled={disabled || value === ''}
+        disabled={disabled || !canErase}
         aria-label={fr.numpad.erase}
       >
         <Icon name="erase" className="size-9" />
@@ -80,7 +97,7 @@ export function NumPad({ value, onChange, onSubmit, maxLength = 3, disabled = fa
         type="button"
         className={`${KEY} bg-success text-white`}
         onClick={submit}
-        disabled={disabled || value === ''}
+        disabled={disabled || !canSubmit}
         aria-label={fr.numpad.submit}
       >
         <Icon name="check" className="size-10" />

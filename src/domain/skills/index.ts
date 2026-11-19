@@ -1,8 +1,10 @@
 import { pick, type Rng } from '../rng';
 import type { Level, Question, SkillId } from '../types';
+import { ads } from './ads';
 import { c10 } from './c10';
 import { c20 } from './c20';
 import { cds } from './cds';
+import { apo, spo } from './columns';
 import { d10 } from './d10';
 import { dbl } from './dbl';
 import { m9 } from './m9';
@@ -13,9 +15,11 @@ import { tad } from './tad';
 import { clampLevel, type SkillDefinition } from './skill';
 
 export type { SkillDefinition } from './skill';
+export { clampLevel } from './skill';
 
 /** Toutes les compétences du référentiel (PRD §4). */
 export const SKILLS: Partial<Record<SkillId, SkillDefinition>> = {
+  ADS: ads,
   C10: c10,
   C20: c20,
   CDS: cds,
@@ -25,6 +29,8 @@ export const SKILLS: Partial<Record<SkillId, SkillDefinition>> = {
   P9: p9,
   M9: m9,
   D10: d10,
+  APO: apo,
+  SPO: spo,
   T2: tableSkill('T2', 2),
   T5: tableSkill('T5', 5),
   T10: tableSkill('T10', 10),

@@ -23,9 +23,18 @@ async function update(
   });
 }
 
-/** L'étape « Je découvre » a été vue : elle ne s'affiche plus d'elle-même (bouton « revoir »). */
-export function markDiscovered(profileId: string, skillId: SkillId, defaultLevel: Level, now: number) {
-  return update(profileId, skillId, defaultLevel, { discoveredAt: now });
+/**
+ * L'étape « Je découvre » a été vue pour ce niveau : elle ne s'affiche plus d'elle-même
+ * (bouton « revoir »), jusqu'au passage à un niveau supérieur.
+ */
+export function markDiscovered(
+  profileId: string,
+  skillId: SkillId,
+  defaultLevel: Level,
+  now: number,
+  level: Level = defaultLevel,
+) {
+  return update(profileId, skillId, defaultLevel, { discoveredAt: now, discoveredLevel: level });
 }
 
 export function setSkillLevel(profileId: string, skillId: SkillId, level: Level) {

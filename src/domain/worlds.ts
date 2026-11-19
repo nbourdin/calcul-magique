@@ -1,12 +1,18 @@
 import { skillMasteryRatio, WORLD_UNLOCK_RATIO } from './engine/progression';
 import type { FactState, SkillId } from './types';
 
-/** Ordre des mondes (PRD §4) ; un monde = une famille de compétences. */
+/**
+ * Ordre des mondes (PRD §4, adouci) ; un monde = une petite famille de compétences,
+ * de la plus facile à la plus difficile. Chaque monde ne demande qu'une marche de plus :
+ * calculs ≤ 10, puis doubles, puis ≤ 20, puis dizaines, calcul posé, ±9 et enfin les tables.
+ */
 export const WORLDS = [
-  { id: 'forest', skills: ['C10', 'C20', 'CDS'] },
+  { id: 'forest', skills: ['ADS', 'C10', 'C20'] },
   { id: 'river', skills: ['DBL', 'PDB'] },
   { id: 'mountain', skills: ['TAD'] },
-  { id: 'meadow', skills: ['P9', 'M9', 'D10'] },
+  { id: 'bridge', skills: ['D10', 'CDS'] },
+  { id: 'station', skills: ['APO', 'SPO'] },
+  { id: 'meadow', skills: ['P9', 'M9'] },
   { id: 'castle', skills: ['T2', 'T5', 'T10', 'T3', 'T4'] },
 ] as const satisfies readonly { id: string; skills: readonly SkillId[] }[];
 
