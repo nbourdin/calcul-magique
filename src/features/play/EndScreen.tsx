@@ -22,7 +22,8 @@ interface EndScreenProps {
   suggestBreak: boolean;
   /** Niveau suivant proposé, ou retour au niveau précédent (absent : rien à dire). */
   levelChange?: SeriesResult['levelChange'];
-  onReplay: () => void;
+  /** Absent pour le défi du jour (une fois par jour). */
+  onReplay?: (() => void) | undefined;
 }
 
 type Stage = 'summary' | 'reveal' | 'choose' | 'chosen';
@@ -109,7 +110,7 @@ export function EndScreen({ series, outcome, suggestBreak, levelChange = null, o
       {(series.bonusStars ?? 0) > 0 && (
         <p className="flex items-center gap-2 text-instruction font-bold">
           <Icon name="star" filled className="size-7 text-[#f5b82e]" />
-          {fr.end.bonus}
+          {series.mode === 'daily' ? fr.end.dailyBonus : fr.end.bonus}
         </p>
       )}
       {streakText && <p className="text-instruction font-bold text-help">{streakText}</p>}
@@ -128,17 +129,21 @@ export function EndScreen({ series, outcome, suggestBreak, levelChange = null, o
               <Icon name="home" />
               {fr.end.home}
             </Link>
-            <button type="button" onClick={onReplay} className="text-lg font-bold text-ink-soft underline">
-              {fr.tomorrow.more}
-            </button>
+            {onReplay && (
+              <button type="button" onClick={onReplay} className="text-lg font-bold text-ink-soft underline">
+                {fr.tomorrow.more}
+              </button>
+            )}
           </>
         ) : (
           <>
-            <Button onClick={onReplay}>
-              <Icon name="replay" />
-              {fr.end.again}
-            </Button>
-            <Link to="/" className={buttonClass('soft')}>
+            {onReplay && (
+              <Button onClick={onReplay}>
+                <Icon name="replay" />
+                {fr.end.again}
+              </Button>
+            )}
+            <Link to="/" className={buttonClass(onReplay ? 'soft' : 'primary')}>
               <Icon name="home" />
               {fr.end.home}
             </Link>

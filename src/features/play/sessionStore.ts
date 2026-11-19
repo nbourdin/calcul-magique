@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { levelAdvice } from '@/domain/engine/progression';
-import { composeSeries } from '@/domain/engine/series';
+import { composeDailySeries, composeSeries } from '@/domain/engine/series';
 import {
   advance,
   currentItem,
@@ -17,7 +17,7 @@ import type { GameId, Level, Series, Settings, SkillId } from '@/domain/types';
 import { newId } from '@/data/db';
 import { countNewFactsToday, listFactStates, listLevelSeries, recordAnswer } from '@/data/progress';
 import { finishSeries, type FinishedSeries } from '@/data/rewards';
-import { getSkillProgress, setSkillLevel } from '@/data/skills';
+import { getSkillProgress, listSkillProgress, setSkillLevel } from '@/data/skills';
 import type { SeriesRewardOutcome } from '@/domain/rewards/seriesRewards';
 
 type Status = 'idle' | 'loading' | 'playing' | 'done' | 'error';
@@ -49,11 +49,18 @@ interface StartArgs {
   now?: () => number;
 }
 
+/** Défi du jour : questions mixtes, toutes compétences confondues. */
+type DailyArgs = Omit<StartArgs, 'skillId' | 'level' | 'adaptive'>;
+
+/** Étoile offerte par le défi du jour (PRD §5). */
+export const DAILY_BONUS_STARS = 1;
+
 interface SessionState {
   status: Status;
   run: RunState | null;
   result: SeriesResult | null;
   start: (args: StartArgs) => Promise<void>;
+  startDaily: (args: DailyArgs) => Promise<void>;
   answer: (correct: boolean, responseMs: number) => Promise<void>;
   next: () => Promise<void>;
   reset: () => void;
@@ -66,6 +73,7 @@ interface Context {
   gameId: GameId;
   level: Level;
   adaptive: boolean;
+  daily: boolean;
   chronoMode: Settings['chronoMode'];
   seriesId: string;
   startedAt: number;
@@ -145,12 +153,53 @@ export const useSession = create<SessionState>()((set, get) => ({
         gameId,
         level,
         adaptive,
+        daily: false,
         chronoMode,
         seriesId: newId(),
         startedAt: t,
         now,
       };
       set({ status: 'playing', run: startRun(plan.questions) });
+    } catch (error) {
+      console.error(error);
+      if (token === generation) set({ status: 'error' });
+    }
+  },
+
+  async startDaily({ profileId, catalogIds, gameId, chronoMode = 'off', rng, now = Date.now }) {
+    const token = ++generation;
+    context = null;
+    set({ status: 'loading', run: null, result: null });
+    try {
+      const t = now();
+      const [states, progress] = await Promise.all([listFactStates(profileId), listSkillProgress(profileId)]);
+      const questions = composeDailySeries({
+        states,
+        now: t,
+        rng: rng ?? createRng(Math.floor(Math.random() * 2 ** 32)),
+        levels: Object.fromEntries(progress.map((p) => [p.skillId, p.level])),
+      });
+      const first = questions[0];
+      if (!first) throw new Error('Défi du jour : aucun fait à réviser');
+      if (token !== generation) return;
+      // La série est rangée sous la compétence la plus présente (historique du parent).
+      const counts = new Map<SkillId, number>();
+      for (const q of questions) counts.set(q.skillId, (counts.get(q.skillId) ?? 0) + 1);
+      const skillId = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? first.skillId;
+      context = {
+        profileId,
+        catalogIds,
+        skillId,
+        gameId,
+        level: 1,
+        adaptive: false,
+        daily: true,
+        chronoMode,
+        seriesId: newId(),
+        startedAt: t,
+        now,
+      };
+      set({ status: 'playing', run: startRun(questions) });
     } catch (error) {
       console.error(error);
       if (token === generation) set({ status: 'error' });
@@ -199,11 +248,12 @@ export const useSession = create<SessionState>()((set, get) => ({
       startedAt: ctx.startedAt,
       endedAt: ctx.now(),
       stars: starsForSeries(firstTryCorrect),
-      bonusStars: chronoBonus(ctx.chronoMode, nextRun.correctFirstTryMs),
-      mode: ctx.chronoMode === 'off' ? 'practice' : 'chrono',
+      bonusStars:
+        chronoBonus(ctx.chronoMode, nextRun.correctFirstTryMs) + (ctx.daily ? DAILY_BONUS_STARS : 0),
+      mode: ctx.daily ? 'daily' : ctx.chronoMode === 'off' ? 'practice' : 'chrono',
       firstTryCorrect,
       questionCount: nextRun.questionCount,
-      level: ctx.level,
+      ...(ctx.daily ? {} : { level: ctx.level }),
     };
     context = null;
     set({ run: nextRun });

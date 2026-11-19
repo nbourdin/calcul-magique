@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { getCharacter } from '@/assets/characters';
+import { canPlayDaily } from '@/domain/engine/series';
 import { placedPieces, PUZZLE_PIECES } from '@/domain/rewards/puzzle';
 import { clampLevel, getSkill } from '@/domain/skills';
 import type { SkillId } from '@/domain/types';
@@ -40,7 +41,7 @@ function LevelDots({ level, total }: { level: number; total: number }) {
 }
 
 export function HomeScreen() {
-  const { profile, rewards, puzzles, facts, skills } = useProfile();
+  const { profile, rewards, puzzles, facts, skills, dailyDone } = useProfile();
   if (!profile || !rewards) return null;
   const open = unlockedWorlds(facts, profile.settings.unlockAll);
   const levelOf = (skillId: SkillId) =>
@@ -78,6 +79,8 @@ export function HomeScreen() {
           </Link>
         </div>
       </header>
+
+      <DailyCard done={dailyDone} available={canPlayDaily(facts)} />
 
       <div className="grid flex-1 items-start gap-6 md:grid-cols-2">
         <section className="flex flex-col items-center gap-3 rounded-3xl bg-surface p-5 shadow-md">
@@ -141,5 +144,32 @@ export function HomeScreen() {
         </nav>
       </div>
     </main>
+  );
+}
+
+/** Défi du jour (PRD §5) : une série de révision mixte, une fois par jour, avec une étoile bonus. */
+function DailyCard({ done, available }: { done: boolean; available: boolean }) {
+  return (
+    <section
+      aria-label={fr.daily.title}
+      className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-[#fff1c9] p-4 shadow-md"
+    >
+      <h2 className="flex items-center gap-2 text-2xl font-extrabold">
+        <Icon name="star" filled className="size-8 text-[#f5b82e]" />
+        {fr.daily.title}
+      </h2>
+      {done ? (
+        <p className="flex items-center gap-2 text-instruction font-bold text-success">
+          <Icon name="check" className="size-7" />
+          {fr.daily.done}
+        </p>
+      ) : available ? (
+        <Link to="/defi" className={buttonClass()}>
+          {fr.daily.play}
+        </Link>
+      ) : (
+        <p className="text-instruction text-ink-soft">{fr.daily.locked}</p>
+      )}
+    </section>
   );
 }

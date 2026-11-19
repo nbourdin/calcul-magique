@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { answeredCount, currentItem } from '@/domain/engine/run';
 import { isSkillAvailable } from '@/domain/skills';
 import type { Level, SkillId } from '@/domain/types';
@@ -7,7 +7,7 @@ import { playSound } from '@/app/audio';
 import { CHARACTER_IDS } from '@/assets/characters';
 import { ListenButton } from '@/features/profile/ListenButton';
 import { useProfile } from '@/features/profile/profileStore';
-import { gamesForSkill, isGameId } from '@/games';
+import { GAMES, gamesForSkill, isGameId } from '@/games';
 import { fr } from '@/i18n/fr';
 import { Icon } from '@/ui/Icon';
 import { EndScreen } from './EndScreen';
@@ -24,18 +24,24 @@ function parseLevel(raw: string | null): Level | null {
   return raw === '1' || raw === '2' || raw === '3' ? (Number(raw) as Level) : null;
 }
 
-export function SeriesScreen() {
+/** Le défi du jour se joue à la course : chaque question a ses 3 propositions. */
+const DAILY_GAME = GAMES.race;
+
+/** Série de 10 questions d'une compétence, ou défi du jour (`daily`, questions mixtes). */
+export function SeriesScreen({ daily = false }: { daily?: boolean }) {
   const { skillId: rawSkill = '' } = useParams();
   const [search] = useSearchParams();
   const skillId = rawSkill as SkillId;
-  const compatible = isSkillAvailable(skillId) ? gamesForSkill(skillId) : [];
+  const compatible = daily ? [DAILY_GAME] : isSkillAvailable(skillId) ? gamesForSkill(skillId) : [];
   const wanted = search.get('jeu') ?? '';
   const game = compatible.find((g) => isGameId(wanted) && g.id === wanted) ?? compatible[0];
   const forcedLevel = parseLevel(search.get('niveau'));
 
   const navigate = useNavigate();
   const [stopAsked, setStopAsked] = useState(false);
-  const { status, run, result, start, answer, next, reset } = useSession();
+  const { status, run, result, start, startDaily, answer, next, reset } = useSession();
+  // Une fois par jour : on regarde à l'arrivée (la fin du défi met l'état à jour).
+  const [dailyAlreadyDone] = useState(() => daily && useProfile.getState().dailyDone);
   const profileId = useProfile((s) => s.profile?.id);
   // Niveau de la compétence pour ce profil, à défaut le niveau de départ réglé par le parent.
   const startLevel = useProfile(
@@ -47,7 +53,11 @@ export function SeriesScreen() {
   const reloadProfile = useProfile((s) => s.load);
 
   const begin = useCallback(async () => {
-    if (!game || !profileId) return;
+    if (!game || !profileId || dailyAlreadyDone) return;
+    if (daily) {
+      await startDaily({ profileId, catalogIds: CHARACTER_IDS, gameId: game.id, chronoMode });
+      return;
+    }
     await start({
       profileId,
       catalogIds: CHARACTER_IDS,
@@ -57,7 +67,18 @@ export function SeriesScreen() {
       adaptive: forcedLevel === null,
       chronoMode,
     });
-  }, [game, profileId, skillId, forcedLevel, startLevel, chronoMode, start]);
+  }, [
+    game,
+    profileId,
+    skillId,
+    forcedLevel,
+    startLevel,
+    chronoMode,
+    start,
+    daily,
+    dailyAlreadyDone,
+    startDaily,
+  ]);
 
   useEffect(() => {
     void begin();
@@ -94,6 +115,7 @@ export function SeriesScreen() {
   }, [status]);
 
   if (!game) throw new Response('', { status: 404 });
+  if (dailyAlreadyDone) return <Navigate to="/" replace />;
 
   if (status === 'error') {
     return (
@@ -115,7 +137,7 @@ export function SeriesScreen() {
         // « À demain » après le nombre de séries ou la durée recommandés par le parent.
         suggestBreak={result.seriesToday >= seriesBeforeBreak || result.minutesToday >= sessionMinutes}
         levelChange={result.levelChange}
-        onReplay={() => void begin()}
+        onReplay={daily ? undefined : () => void begin()}
       />
     );
   }

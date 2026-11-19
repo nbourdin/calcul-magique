@@ -84,7 +84,7 @@ export async function listLevelSeries(
     .where('[profileId+endedAt]')
     .between([profileId, since], [profileId, Infinity], false, true)
     .toArray();
-  return all.filter((s) => s.skillId === skillId && s.level === level);
+  return all.filter((s) => s.skillId === skillId && s.level === level && s.mode !== 'daily');
 }
 
 export function listRecentSeries(profileId: string, limit = 10): Promise<Series[]> {

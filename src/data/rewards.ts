@@ -51,6 +51,15 @@ export async function setTheme(profileId: string, theme: ThemeId): Promise<void>
   });
 }
 
+/** Le défi du jour a déjà été relevé aujourd'hui (une fois par jour, PRD §5). */
+export async function dailyDoneToday(profileId: string, now: number): Promise<boolean> {
+  const today = await db.series
+    .where('[profileId+endedAt]')
+    .between([profileId, startOfLocalDayPlus(now, 0)], [profileId, Infinity])
+    .toArray();
+  return today.some((s) => s.mode === 'daily');
+}
+
 export async function countSeriesToday(profileId: string, now: number): Promise<number> {
   return db.series
     .where('[profileId+endedAt]')

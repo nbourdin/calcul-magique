@@ -5,6 +5,7 @@ import type { SkillId } from '@/domain/types';
 import { db } from '@/data/db';
 import { listAttemptsOfSeries, listFactStates, listRecentSeries } from '@/data/progress';
 import { getSkillProgress } from '@/data/skills';
+import { dailyDoneToday } from '@/data/rewards';
 import { useSession } from './sessionStore';
 
 const NOW = new Date(2026, 10, 19, 17, 0).getTime();
@@ -158,6 +159,42 @@ describe('session de jeu', () => {
       });
       await play(() => true);
       expect(useSession.getState().result?.series.level).toBe(2);
+    });
+  });
+
+  describe('défi du jour', () => {
+    const startDaily = () =>
+      useSession.getState().startDaily({
+        profileId: 'p1',
+        catalogIds: ['fee'],
+        gameId: 'race',
+        rng: createRng(2),
+        now: () => NOW,
+      });
+
+    it('révise les faits déjà vus, donne une étoile bonus et compte pour aujourd’hui', async () => {
+      await startSeries();
+      await play(() => true);
+      const seen = new Set((await listFactStates('p1')).map((s) => s.factKey));
+      expect(await dailyDoneToday('p1', NOW)).toBe(false);
+
+      await startDaily();
+      const { run } = useSession.getState();
+      expect(run?.questionCount).toBe(10);
+      expect(run?.queue).toHaveLength(10);
+      for (const item of run?.queue ?? []) expect(seen.has(item.question.factKey)).toBe(true);
+      await play(() => true);
+      const { result } = useSession.getState();
+      expect(result?.series).toMatchObject({ mode: 'daily', stars: 3, bonusStars: 1, gameId: 'race' });
+      expect(result?.series.level).toBeUndefined();
+      expect(result?.outcome?.starsGained).toBe(4);
+      expect(result?.levelChange).toBeNull();
+      expect(await dailyDoneToday('p1', NOW)).toBe(true);
+    });
+
+    it('sans fait connu, le défi ne démarre pas', async () => {
+      await startDaily();
+      expect(useSession.getState().status).toBe('error');
     });
   });
 });

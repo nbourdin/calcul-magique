@@ -260,6 +260,13 @@ export const fr = {
     home: 'Accueil',
     seeFriend: 'Découvrir mon ami',
     bonus: 'Étoile bonus : rapide comme l’éclair !',
+    dailyBonus: 'Étoile bonus du défi du jour !',
+  },
+  daily: {
+    title: 'Défi du jour',
+    play: 'Relève le défi !',
+    done: 'Défi réussi ! Reviens demain.',
+    locked: 'Joue une série pour l’ouvrir.',
   },
   level: {
     upTitle: 'Envie d’un défi plus grand ?',
