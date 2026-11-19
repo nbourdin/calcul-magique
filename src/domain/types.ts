@@ -118,6 +118,8 @@ export interface Series {
   /** Étoile bonus du mode chrono (0 ou 1), en plus des étoiles de la série. */
   bonusStars?: number;
   questionCount: number;
+  /** Niveau joué (absent des séries enregistrées avant la progression par niveau). */
+  level?: Level;
 }
 
 /** Métadonnées d'un personnage de l'album (un fichier JSON par personnage). */

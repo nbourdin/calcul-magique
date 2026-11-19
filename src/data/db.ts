@@ -12,6 +12,11 @@ export interface SkillProgress {
   discoveredAt?: number;
   /** Niveau montré lors de la dernière découverte : un nouveau niveau se redécouvre. */
   discoveredLevel?: Level;
+  /**
+   * Dernier changement de niveau ou dernier « pas encore » de l'enfant : seules les séries
+   * jouées après comptent pour proposer un autre niveau.
+   */
+  levelSince?: number;
 }
 
 /** Version du schéma : incrémentée à chaque migration, reprise dans l'export JSON. */

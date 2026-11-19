@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { levelAdvice } from '@/domain/engine/progression';
 import { composeSeries } from '@/domain/engine/series';
 import {
   advance,
@@ -11,10 +12,12 @@ import {
 import { chronoBonus } from '@/domain/rewards/chrono';
 import { starsForSeries } from '@/domain/rewards/stars';
 import { createRng, type Rng } from '@/domain/rng';
+import { clampLevel, getSkill } from '@/domain/skills';
 import type { GameId, Level, Series, Settings, SkillId } from '@/domain/types';
 import { newId } from '@/data/db';
-import { countNewFactsToday, listFactStates, recordAnswer } from '@/data/progress';
+import { countNewFactsToday, listFactStates, listLevelSeries, recordAnswer } from '@/data/progress';
 import { finishSeries, type FinishedSeries } from '@/data/rewards';
+import { getSkillProgress, setSkillLevel } from '@/data/skills';
 import type { SeriesRewardOutcome } from '@/domain/rewards/seriesRewards';
 
 type Status = 'idle' | 'loading' | 'playing' | 'done' | 'error';
@@ -25,6 +28,11 @@ export interface SeriesResult {
   outcome: SeriesRewardOutcome | null;
   seriesToday: number;
   minutesToday: number;
+  /**
+   * « up » : niveau supérieur proposé à l'enfant (elle accepte ou non) ;
+   * « down » : on est déjà revenu au niveau précédent, avec un message encourageant.
+   */
+  levelChange: { kind: 'up' | 'down'; level: Level } | null;
 }
 
 interface StartArgs {
@@ -35,6 +43,8 @@ interface StartArgs {
   gameId: GameId;
   level: Level;
   chronoMode?: Settings['chronoMode'];
+  /** Faux quand le niveau est imposé (lien de dev) : pas de conseil de niveau en fin de série. */
+  adaptive?: boolean;
   rng?: Rng;
   now?: () => number;
 }
@@ -54,10 +64,39 @@ interface Context {
   catalogIds: readonly string[];
   skillId: SkillId;
   gameId: GameId;
+  level: Level;
+  adaptive: boolean;
   chronoMode: Settings['chronoMode'];
   seriesId: string;
   startedAt: number;
   now: () => number;
+}
+
+/**
+ * Conseil de niveau après une série (la série vient d'être enregistrée) : on propose de monter,
+ * ou on redescend d'un niveau tout de suite après deux séries difficiles.
+ */
+async function adviseLevel(ctx: Context, now: number): Promise<SeriesResult['levelChange']> {
+  const { profileId, skillId, level } = ctx;
+  const [progress, states] = await Promise.all([
+    getSkillProgress(profileId, skillId),
+    listFactStates(profileId),
+  ]);
+  const played = await listLevelSeries(profileId, skillId, level, progress?.levelSince ?? 0);
+  const rates = played.map((s) => s.firstTryCorrect / s.questionCount);
+  const advice = levelAdvice({ skillId, level, states, rates });
+  const { levels } = getSkill(skillId);
+  if (advice === 'up') {
+    const up = levels.find((l) => l > level);
+    return up ? { kind: 'up', level: up } : null;
+  }
+  if (advice === 'down') {
+    const down = [...levels].reverse().find((l) => l < level);
+    if (!down) return null;
+    await setSkillLevel(profileId, skillId, down, now);
+    return { kind: 'down', level: down };
+  }
+  return null;
 }
 
 /** Série en cours : seule la session courante peut écrire (évite les doubles démarrages). */
@@ -69,11 +108,22 @@ export const useSession = create<SessionState>()((set, get) => ({
   run: null,
   result: null,
 
-  async start({ profileId, catalogIds, skillId, gameId, level, chronoMode = 'off', rng, now = Date.now }) {
+  async start({
+    profileId,
+    catalogIds,
+    skillId,
+    gameId,
+    level: wanted,
+    chronoMode = 'off',
+    adaptive = true,
+    rng,
+    now = Date.now,
+  }) {
     const token = ++generation;
     context = null;
     set({ status: 'loading', run: null, result: null });
     try {
+      const level = clampLevel(getSkill(skillId), wanted);
       const t = now();
       const [states, newFactsIntroducedToday] = await Promise.all([
         listFactStates(profileId),
@@ -88,7 +138,18 @@ export const useSession = create<SessionState>()((set, get) => ({
         rng: rng ?? createRng(Math.floor(Math.random() * 2 ** 32)),
       });
       if (token !== generation) return;
-      context = { profileId, catalogIds, skillId, gameId, chronoMode, seriesId: newId(), startedAt: t, now };
+      context = {
+        profileId,
+        catalogIds,
+        skillId,
+        gameId,
+        level,
+        adaptive,
+        chronoMode,
+        seriesId: newId(),
+        startedAt: t,
+        now,
+      };
       set({ status: 'playing', run: startRun(plan.questions) });
     } catch (error) {
       console.error(error);
@@ -142,12 +203,19 @@ export const useSession = create<SessionState>()((set, get) => ({
       mode: ctx.chronoMode === 'off' ? 'practice' : 'chrono',
       firstTryCorrect,
       questionCount: nextRun.questionCount,
+      level: ctx.level,
     };
     context = null;
     set({ run: nextRun });
     let finished: FinishedSeries | null = null;
     try {
       finished = await finishSeries(series, ctx.catalogIds, series.endedAt);
+    } catch (error) {
+      console.error(error);
+    }
+    let levelChange: SeriesResult['levelChange'] = null;
+    try {
+      if (ctx.adaptive && finished) levelChange = await adviseLevel(ctx, series.endedAt);
     } catch (error) {
       console.error(error);
     }
@@ -158,6 +226,7 @@ export const useSession = create<SessionState>()((set, get) => ({
         outcome: finished?.outcome ?? null,
         seriesToday: finished?.seriesToday ?? 1,
         minutesToday: finished?.minutesToday ?? 0,
+        levelChange,
       },
     });
   },

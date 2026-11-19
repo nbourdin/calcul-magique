@@ -12,12 +12,16 @@ import { fr } from '@/i18n/fr';
 import { Button } from '@/ui/Button';
 import { buttonClass } from '@/ui/buttonClass';
 import { Icon } from '@/ui/Icon';
+import type { SeriesResult } from './sessionStore';
+import { LevelCard } from './LevelCard';
 
 interface EndScreenProps {
   series: Series;
   outcome: SeriesRewardOutcome | null;
   /** Assez de séries aujourd'hui : on encourage à s'arrêter (« à demain »). */
   suggestBreak: boolean;
+  /** Niveau suivant proposé, ou retour au niveau précédent (absent : rien à dire). */
+  levelChange?: SeriesResult['levelChange'];
   onReplay: () => void;
 }
 
@@ -38,7 +42,7 @@ function streakMessage(outcome: SeriesRewardOutcome): string | null {
 }
 
 /** Fin de série : étoiles, pièce de puzzle qui vole à sa place, puis révélation si le puzzle est fini. */
-export function EndScreen({ series, outcome, suggestBreak, onReplay }: EndScreenProps) {
+export function EndScreen({ series, outcome, suggestBreak, levelChange = null, onReplay }: EndScreenProps) {
   const [stage, setStage] = useState<Stage>('summary');
   const piece = outcome?.piece ?? null;
   const character = piece ? getCharacter(piece.characterId) : undefined;
@@ -109,6 +113,9 @@ export function EndScreen({ series, outcome, suggestBreak, onReplay }: EndScreen
         </p>
       )}
       {streakText && <p className="text-instruction font-bold text-help">{streakText}</p>}
+      {levelChange && stage === 'summary' && !piece?.completed && (
+        <LevelCard skillId={series.skillId} change={levelChange} />
+      )}
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
         {piece?.completed && stage === 'summary' ? (

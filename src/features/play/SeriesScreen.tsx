@@ -54,6 +54,7 @@ export function SeriesScreen() {
       skillId,
       gameId: game.id,
       level: forcedLevel ?? startLevel,
+      adaptive: forcedLevel === null,
       chronoMode,
     });
   }, [game, profileId, skillId, forcedLevel, startLevel, chronoMode, start]);
@@ -113,6 +114,7 @@ export function SeriesScreen() {
         outcome={result.outcome}
         // « À demain » après le nombre de séries ou la durée recommandés par le parent.
         suggestBreak={result.seriesToday >= seriesBeforeBreak || result.minutesToday >= sessionMinutes}
+        levelChange={result.levelChange}
         onReplay={() => void begin()}
       />
     );

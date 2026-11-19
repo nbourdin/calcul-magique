@@ -259,6 +259,15 @@ export const fr = {
     seeFriend: 'Découvrir mon ami',
     bonus: 'Étoile bonus : rapide comme l’éclair !',
   },
+  level: {
+    upTitle: 'Envie d’un défi plus grand ?',
+    upText: (n: number) => `Le niveau ${n} t’attend !`,
+    upYes: (n: number) => `Oui, niveau ${n} !`,
+    upNo: 'Pas encore',
+    downTitle: 'On reprend un peu plus doucement.',
+    downText: 'Revois l’astuce, tu vas y arriver !',
+    rewatch: 'Revoir l’astuce',
+  },
   /** Espace parent : textes pour adultes, ils peuvent être plus longs. */
   parent: {
     open: 'Espace parent',

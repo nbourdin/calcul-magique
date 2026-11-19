@@ -3,6 +3,10 @@ import { db, type SkillProgress } from './db';
 
 export type { SkillProgress } from './db';
 
+export function getSkillProgress(profileId: string, skillId: SkillId): Promise<SkillProgress | undefined> {
+  return db.skillProgress.get([profileId, skillId]);
+}
+
 export function listSkillProgress(profileId: string): Promise<SkillProgress[]> {
   return db.skillProgress.where('profileId').equals(profileId).toArray();
 }
@@ -37,6 +41,11 @@ export function markDiscovered(
   return update(profileId, skillId, defaultLevel, { discoveredAt: now, discoveredLevel: level });
 }
 
-export function setSkillLevel(profileId: string, skillId: SkillId, level: Level) {
-  return update(profileId, skillId, level, { level });
+export function setSkillLevel(profileId: string, skillId: SkillId, level: Level, now?: number) {
+  return update(profileId, skillId, level, now === undefined ? { level } : { level, levelSince: now });
+}
+
+/** L'enfant préfère rester à ce niveau : on attend de nouvelles séries avant de reproposer. */
+export function postponeLevelUp(profileId: string, skillId: SkillId, level: Level, now: number) {
+  return update(profileId, skillId, level, { levelSince: now });
 }
