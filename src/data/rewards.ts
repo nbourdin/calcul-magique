@@ -1,3 +1,4 @@
+import { newMedals, type MedalContext } from '@/domain/rewards/medals';
 import { nextCharacterChoices, type PuzzleProgress } from '@/domain/rewards/puzzle';
 import {
   applySeriesRewards,
@@ -67,6 +68,31 @@ export async function countSeriesToday(profileId: string, now: number): Promise<
     .count();
 }
 
+/** Ce qu'il faut savoir du profil pour attribuer les médailles (dans la transaction de fin de série). */
+async function medalContext(series: Series, outcome: SeriesRewardOutcome): Promise<MedalContext> {
+  const { profileId } = series;
+  const [allSeries, facts, frogAnswers, puzzles] = await Promise.all([
+    db.series.where('profileId').equals(profileId).toArray(),
+    db.factStates.where('profileId').equals(profileId).toArray(),
+    db.attempts
+      .where('profileId')
+      .equals(profileId)
+      .filter((a) => a.gameId === 'frog')
+      .count(),
+    db.puzzles.where('profileId').equals(profileId).toArray(),
+  ]);
+  return {
+    series,
+    seriesCount: allSeries.length,
+    streak: outcome.streak,
+    streakChange: outcome.streakChange,
+    facts,
+    frogAnswers,
+    completedPuzzles: puzzles.filter((p) => p.completedAt !== undefined).length,
+    dailyQuestions: allSeries.filter((s) => s.mode === 'daily').reduce((n, s) => n + s.questionCount, 0),
+  };
+}
+
 export interface FinishedSeries {
   outcome: SeriesRewardOutcome;
   /** Séries terminées aujourd'hui, celle-ci comprise (message « à demain »). */
@@ -86,7 +112,7 @@ export async function finishSeries(
   now: number,
 ): Promise<FinishedSeries> {
   const { profileId } = series;
-  return db.transaction('rw', [db.series, db.rewards, db.puzzles], async () => {
+  return db.transaction('rw', [db.series, db.rewards, db.puzzles, db.attempts, db.factStates], async () => {
     await db.series.put(series);
     let reward = await getRewards(profileId);
     let activePuzzle = reward.activeCharacterId
@@ -101,14 +127,15 @@ export async function finishSeries(
       }
     }
     const applied = applySeriesRewards({ reward, activePuzzle, series, today: dayKey(now), now });
-    await db.rewards.put(applied.reward);
     if (applied.puzzle) await db.puzzles.put(applied.puzzle);
+    const medals = newMedals(applied.reward.badges, await medalContext(series, applied.outcome));
+    await db.rewards.put({ ...applied.reward, badges: [...applied.reward.badges, ...medals] });
     const today = await db.series
       .where('[profileId+endedAt]')
       .between([profileId, startOfLocalDayPlus(now, 0)], [profileId, Infinity])
       .toArray();
     return {
-      outcome: applied.outcome,
+      outcome: { ...applied.outcome, newMedals: medals },
       seriesToday: today.length,
       minutesToday: minutesOnDay(today, dayKey(now)),
     };

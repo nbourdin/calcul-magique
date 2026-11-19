@@ -1,3 +1,4 @@
+import type { MedalId } from '@/domain/rewards/medals';
 import type { SkillId } from '@/domain/types';
 
 /**
@@ -261,6 +262,21 @@ export const fr = {
     seeFriend: 'Découvrir mon ami',
     bonus: 'Étoile bonus : rapide comme l’éclair !',
     dailyBonus: 'Étoile bonus du défi du jour !',
+  },
+  medals: {
+    title: 'Mes médailles',
+    none: 'Tes médailles arriveront en jouant.',
+    new: 'Nouvelle médaille !',
+    names: {
+      firstSeries: 'Première série',
+      streak3: '3 jours de suite',
+      master10: 'Maître du 10',
+      frogJumper: 'Sauteur de grenouille',
+      perfectRace: 'Course parfaite',
+      album3: 'Album à 3 amis',
+      daily100: '100 questions du défi',
+      comeback: 'Bon retour !',
+    } satisfies Record<MedalId, string>,
   },
   daily: {
     title: 'Défi du jour',

@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { CHARACTERS } from '@/assets/characters';
+import { MEDALS } from '@/domain/rewards/medals';
 import { isComplete, placedPieces } from '@/domain/rewards/puzzle';
 import { isThemeUnlocked, THEMES, type ThemeId } from '@/domain/rewards/themes';
 import { setTheme } from '@/data/rewards';
 import { useProfile } from '@/features/profile/profileStore';
 import { StarCount } from '@/features/rewards/Badges';
+import { Medal, MedalName } from '@/features/rewards/Medal';
 import { Puzzle } from '@/features/rewards/Puzzle';
 import { fr } from '@/i18n/fr';
 import { Icon } from '@/ui/Icon';
@@ -21,6 +23,8 @@ export function AlbumScreen() {
   const { profile, rewards, puzzles, load } = useProfile();
   if (!profile || !rewards) return null;
   const completed = puzzles.filter(isComplete).length;
+  // Seules les médailles gagnées s'affichent : jamais de liste d'obligations (PRD §7).
+  const medals = MEDALS.filter((id) => rewards.badges.includes(id));
 
   const chooseTheme = async (theme: ThemeId) => {
     await setTheme(profile.id, theme);
@@ -73,6 +77,22 @@ export function AlbumScreen() {
           );
         })}
       </ul>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-2xl font-extrabold">{fr.medals.title}</h2>
+        {medals.length === 0 ? (
+          <p className="text-instruction text-ink-soft">{fr.medals.none}</p>
+        ) : (
+          <ul className="flex flex-wrap gap-4">
+            {medals.map((id) => (
+              <li key={id} className="flex w-28 flex-col items-center gap-1 text-center">
+                <Medal id={id} />
+                <MedalName id={id} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-2xl font-extrabold">{fr.album.themes}</h2>

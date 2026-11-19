@@ -6,6 +6,7 @@ import { pieceOrder } from '@/domain/rewards/puzzle';
 import type { SeriesRewardOutcome } from '@/domain/rewards/seriesRewards';
 import type { Series } from '@/domain/types';
 import { ChooseCharacter } from '@/features/rewards/ChooseCharacter';
+import { Medal, MedalName } from '@/features/rewards/Medal';
 import { Puzzle } from '@/features/rewards/Puzzle';
 import { Reveal } from '@/features/rewards/Reveal';
 import { fr } from '@/i18n/fr';
@@ -114,6 +115,19 @@ export function EndScreen({ series, outcome, suggestBreak, levelChange = null, o
         </p>
       )}
       {streakText && <p className="text-instruction font-bold text-help">{streakText}</p>}
+      {outcome && outcome.newMedals.length > 0 && (
+        <section className="flex flex-col items-center gap-2">
+          <p className="text-instruction font-bold">{fr.medals.new}</p>
+          <ul className="flex flex-wrap justify-center gap-4">
+            {outcome.newMedals.map((id) => (
+              <li key={id} className="anim-pop-in flex w-28 flex-col items-center gap-1 text-center">
+                <Medal id={id} />
+                <MedalName id={id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {levelChange && stage === 'summary' && !piece?.completed && (
         <LevelCard skillId={series.skillId} change={levelChange} />
       )}

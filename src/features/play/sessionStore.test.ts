@@ -55,6 +55,7 @@ describe('session de jeu', () => {
       skillId: 'C10',
     });
     expect(result?.outcome?.piece).toMatchObject({ characterId: 'fee', piecesPlaced: 1 });
+    expect(result?.outcome?.newMedals).toEqual(['firstSeries']);
     expect(result?.seriesToday).toBe(1);
     expect(await listAttemptsOfSeries(result?.series.id ?? '')).toHaveLength(10);
     expect(await listRecentSeries('p1')).toHaveLength(1);
@@ -190,6 +191,9 @@ describe('session de jeu', () => {
       expect(result?.outcome?.starsGained).toBe(4);
       expect(result?.levelChange).toBeNull();
       expect(await dailyDoneToday('p1', NOW)).toBe(true);
+      // 10/10 à la course : médaille « Course parfaite » (la première série l'a déjà eue).
+      expect(result?.outcome?.newMedals).toEqual(['perfectRace']);
+      expect((await db.rewards.get('p1'))?.badges).toEqual(['firstSeries', 'perfectRace']);
     });
 
     it('sans fait connu, le défi ne démarre pas', async () => {

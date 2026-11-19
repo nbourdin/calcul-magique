@@ -1,4 +1,5 @@
 import type { Series } from '../types';
+import type { MedalId } from './medals';
 import { placePiece, startPuzzle, type PuzzleProgress } from './puzzle';
 import { EMPTY_STREAK, recordPlayDay, type Streak, type StreakChange } from './streak';
 import { DEFAULT_THEME, newlyUnlockedThemes, type ThemeId } from './themes';
@@ -38,6 +39,8 @@ export interface SeriesRewardOutcome {
   streak: Streak;
   streakChange: StreakChange;
   piece: PieceOutcome | null;
+  /** Médailles gagnées par cette série (calculées à l'enregistrement). */
+  newMedals: MedalId[];
 }
 
 /** Choisit un personnage : démarre son puzzle (ou reprend celui commencé). */
@@ -94,6 +97,7 @@ export function applySeriesRewards(input: {
       streak,
       streakChange: change,
       piece,
+      newMedals: [],
     },
   };
 }
