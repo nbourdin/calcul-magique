@@ -1,5 +1,5 @@
-import { useCallback, useEffect } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { answeredCount, currentItem } from '@/domain/engine/run';
 import { isSkillAvailable } from '@/domain/skills';
 import type { Level, SkillId } from '@/domain/types';
@@ -11,6 +11,7 @@ import { Icon } from '@/ui/Icon';
 import { EndScreen } from './EndScreen';
 import { HelpPanel } from './HelpPanel';
 import { useSession } from './sessionStore';
+import { StopDialog } from './StopDialog';
 
 /** Délai avant la question suivante après une bonne réponse (PRD §5). */
 const SUCCESS_DELAY_MS = 700;
@@ -28,6 +29,8 @@ export function SeriesScreen() {
   const game = compatible.find((g) => isGameId(wanted) && g.id === wanted) ?? compatible[0];
   const forcedLevel = parseLevel(search.get('niveau'));
 
+  const navigate = useNavigate();
+  const [stopAsked, setStopAsked] = useState(false);
   const { status, run, result, start, answer, next, reset } = useSession();
   const profileId = useProfile((s) => s.profile?.id);
   // Niveau de la compétence pour ce profil, à défaut le niveau de départ réglé par le parent.
@@ -60,10 +63,22 @@ export function SeriesScreen() {
 
   const phase = run?.phase;
   useEffect(() => {
-    if (phase !== 'success') return;
+    if (phase !== 'success' || stopAsked) return;
     const timer = setTimeout(() => void next(), SUCCESS_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [phase, run, next]);
+  }, [phase, run, next, stopAsked]);
+
+  // Échap ouvre (ou ferme) la demande d'arrêt, pour jouer entièrement au clavier.
+  useEffect(() => {
+    if (status !== 'playing') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      setStopAsked((asked) => !asked);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [status]);
 
   if (!game) throw new Response('', { status: 404 });
 
@@ -106,13 +121,14 @@ export function SeriesScreen() {
   return (
     <main className="flex flex-1 flex-col gap-4 py-4">
       <header className="flex items-center gap-4">
-        <Link
-          to="/"
-          aria-label={fr.play.quit}
-          className="flex size-tap shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary"
+        <button
+          type="button"
+          onClick={() => setStopAsked(true)}
+          className="flex min-h-tap shrink-0 items-center gap-2 rounded-full bg-primary-soft px-4 text-lg font-extrabold text-primary transition hover:bg-primary hover:text-white focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <Icon name="home" />
-        </Link>
+          <Icon name="pause" className="size-6" />
+          {fr.play.stop}
+        </button>
         <div
           role="progressbar"
           aria-label={fr.play.progress(Math.min(done + 1, run.questionCount), run.questionCount)}
@@ -134,7 +150,7 @@ export function SeriesScreen() {
         key={`${item.question.id}-${item.attempt}`}
         question={item.question}
         attempt={item.attempt}
-        active={run.phase === 'question'}
+        active={run.phase === 'question' && !stopAsked}
         progress={done / run.questionCount}
         onAnswer={(correct, ms) => void answer(correct, ms)}
       />
@@ -154,6 +170,8 @@ export function SeriesScreen() {
           <HelpPanel question={item.question} willRetry={item.attempt === 1} onContinue={() => void next()} />
         </div>
       )}
+
+      {stopAsked && <StopDialog onContinue={() => setStopAsked(false)} onStop={() => navigate('/')} />}
     </main>
   );
 }

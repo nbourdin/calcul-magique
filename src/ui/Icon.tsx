@@ -1,5 +1,5 @@
 /** Icônes SVG embarquées (aucun contenu externe). Décoratives : le texte voisin porte le sens. */
-type IconName = 'check' | 'help' | 'star' | 'erase' | 'home' | 'replay';
+type IconName = 'check' | 'help' | 'star' | 'erase' | 'home' | 'replay' | 'pause';
 
 const paths: Record<IconName, string> = {
   check: 'M5 12.5l4.5 4.5L19 7.5',
@@ -8,6 +8,7 @@ const paths: Record<IconName, string> = {
   erase: 'M21 5H9l-6 7 6 7h12zM12 9l6 6M18 9l-6 6',
   home: 'M3 11l9-7.5 9 7.5M5.5 9.5V20h13V9.5M10 20v-5.5h4V20',
   replay: 'M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5',
+  pause: 'M8.5 5v14M15.5 5v14',
 };
 
 export function Icon({
