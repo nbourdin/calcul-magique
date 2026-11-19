@@ -1,5 +1,6 @@
 import { skillMasteryRatio, WORLD_UNLOCK_RATIO } from './engine/progression';
-import type { FactState, SkillId } from './types';
+import { skillSummary } from './parent/dashboard';
+import type { FactState, Level, SkillId } from './types';
 
 /**
  * Ordre des mondes (PRD §4, adouci) ; un monde = une petite famille de compétences,
@@ -35,6 +36,24 @@ export function unlockedWorlds(states: readonly FactState[], unlockAll = false):
     open.push(world.id);
   }
   return open;
+}
+
+/**
+ * Prochaine étape conseillée sur la carte : la première compétence (dans l'ordre des mondes
+ * ouverts) qui n'est pas encore solide à son niveau. L'enfant reste libre de jouer ailleurs.
+ */
+export function suggestedSkill(
+  open: readonly WorldId[],
+  levelOf: (skillId: SkillId) => Level,
+  states: readonly FactState[],
+): SkillId | null {
+  for (const world of WORLDS) {
+    if (!open.includes(world.id)) continue;
+    for (const skillId of world.skills as readonly SkillId[]) {
+      if (skillSummary(skillId, levelOf(skillId), states).status !== 'solid') return skillId;
+    }
+  }
+  return null;
 }
 
 export function worldOfSkill(skillId: SkillId): WorldId | undefined {

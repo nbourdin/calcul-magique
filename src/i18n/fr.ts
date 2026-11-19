@@ -15,6 +15,8 @@ export const fr = {
     puzzleProgress: (n: number, total: number) => `${n} pièce${n > 1 ? 's' : ''} sur ${total}`,
     puzzleOf: (name: string) => `Le puzzle de ${name}`,
     chooseNext: 'Choisis ton prochain ami',
+    level: (n: number, total: number) => `Niveau ${n} sur ${total}`,
+    nextStep: 'Par ici !',
     switchProfile: 'Changer de joueur',
   },
   worlds: {

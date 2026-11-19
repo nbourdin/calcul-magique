@@ -1,7 +1,7 @@
 import { newFactState } from './engine/leitner';
 import { factsFor } from './skills';
 import type { FactState, SkillId } from './types';
-import { unlockedWorlds, worldOfSkill, WORLDS } from './worlds';
+import { suggestedSkill, unlockedWorlds, worldOfSkill, WORLDS } from './worlds';
 
 const mastered = (skillId: SkillId, count: number): FactState[] =>
   factsFor(skillId, 1)
@@ -40,6 +40,21 @@ describe('mondes', () => {
 
   it('le parent peut tout débloquer', () => {
     expect(unlockedWorlds([], true)).toHaveLength(WORLDS.length);
+  });
+
+  it('conseille la première compétence pas encore solide', () => {
+    const one = () => 1 as const;
+    expect(suggestedSkill(['forest'], one, [])).toBe('ADS');
+    const adsSolid = factsFor('ADS', 1).map((k) => ({
+      ...newFactState('p1', k, 'ADS', 0),
+      box: 3 as const,
+      consecutiveCorrect: 3,
+      seenCount: 3,
+    }));
+    expect(suggestedSkill(['forest'], one, adsSolid)).toBe('C10');
+    // Au niveau 2, « Plus et moins » redevient l'étape conseillée.
+    expect(suggestedSkill(['forest'], (s) => (s === 'ADS' ? 2 : 1), adsSolid)).toBe('ADS');
+    expect(suggestedSkill([], one, [])).toBeNull();
   });
 
   it('retrouve le monde d’une compétence', () => {
