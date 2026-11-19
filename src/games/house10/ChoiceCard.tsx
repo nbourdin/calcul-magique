@@ -40,7 +40,7 @@ export function ChoiceCard({ value, disabled, state, dropTarget, onPick, onDragO
       style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
       onPointerDown={(e) => {
         if (disabled) return;
-        e.currentTarget.setPointerCapture(e.pointerId);
+        e.currentTarget.setPointerCapture?.(e.pointerId);
         start.current = { x: e.clientX, y: e.clientY };
         dragged.current = false;
       }}
