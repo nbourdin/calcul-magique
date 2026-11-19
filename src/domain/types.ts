@@ -97,3 +97,14 @@ export interface Series {
   firstTryCorrect: number;
   questionCount: number;
 }
+
+/** Métadonnées d'un personnage de l'album (un fichier JSON par personnage). */
+export interface CharacterMeta {
+  id: string;
+  /** Ordre de proposition dans l'album. */
+  order: number;
+  name: string;
+  title: string;
+  color: string;
+  greeting: string;
+}
