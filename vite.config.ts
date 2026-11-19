@@ -8,13 +8,18 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  build: {
+    // Sons et illustrations restent des fichiers (préchargés par le service worker) au lieu
+    // d'alourdir le JavaScript de démarrage en base64.
+    assetsInlineLimit: (file) => (/\.(ogg|mp3)$|characters\/.*\.svg$/.test(file) ? false : undefined),
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
         name: 'Calcul Magique',
         short_name: 'Calcul Magique',

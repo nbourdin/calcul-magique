@@ -1,19 +1,31 @@
 import type { GameId, SkillId } from '@/domain/types';
-import { BubblesGame } from './bubbles/BubblesGame';
-import { FrogGame } from './frog/FrogGame';
-import { House10Game } from './house10/House10Game';
-import { RaceGame } from './race/RaceGame';
-import { ShopGame } from './shop/ShopGame';
+import { lazy } from 'react';
 import type { GameDefinition } from './types';
 
 export type { GameDefinition, GameProps } from './types';
 
+// Chaque jeu est un morceau chargé à la demande (préchargé par le service worker).
 export const GAMES: Record<GameId, GameDefinition> = {
-  house10: { id: 'house10', Component: House10Game },
-  frog: { id: 'frog', Component: FrogGame },
-  bubbles: { id: 'bubbles', Component: BubblesGame },
-  race: { id: 'race', Component: RaceGame },
-  shop: { id: 'shop', Component: ShopGame },
+  house10: {
+    id: 'house10',
+    Component: lazy(() => import('./house10/House10Game').then((m) => ({ default: m.House10Game }))),
+  },
+  frog: {
+    id: 'frog',
+    Component: lazy(() => import('./frog/FrogGame').then((m) => ({ default: m.FrogGame }))),
+  },
+  bubbles: {
+    id: 'bubbles',
+    Component: lazy(() => import('./bubbles/BubblesGame').then((m) => ({ default: m.BubblesGame }))),
+  },
+  race: {
+    id: 'race',
+    Component: lazy(() => import('./race/RaceGame').then((m) => ({ default: m.RaceGame }))),
+  },
+  shop: {
+    id: 'shop',
+    Component: lazy(() => import('./shop/ShopGame').then((m) => ({ default: m.ShopGame }))),
+  },
 };
 
 /**

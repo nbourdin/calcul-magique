@@ -5,7 +5,22 @@ import { generateQuestion, getSkill } from '@/domain/skills';
 import type { GameId, Question, SkillId } from '@/domain/types';
 import { fr } from '@/i18n/fr';
 import { frogJumps, jumpLabel } from './frog/jumps';
-import { gamesForSkill, SKILL_GAMES } from './index';
+import { BubblesGame } from './bubbles/BubblesGame';
+import { FrogGame } from './frog/FrogGame';
+import { House10Game } from './house10/House10Game';
+import { SKILL_GAMES } from './index';
+import { RaceGame } from './race/RaceGame';
+import { ShopGame } from './shop/ShopGame';
+import type { GameProps } from './types';
+
+/** Les jeux importés directement (le registre les charge à la demande). */
+const COMPONENTS: Record<GameId, (props: GameProps) => React.JSX.Element> = {
+  house10: House10Game,
+  frog: FrogGame,
+  bubbles: BubblesGame,
+  race: RaceGame,
+  shop: ShopGame,
+};
 
 /** Tape un nombre au clavier puis Entrée (pavé numérique). */
 function typeNumber(n: number) {
@@ -49,8 +64,8 @@ const answerWith: Record<GameId, (q: Question, value: number) => void> = {
 const wrongValue = (q: Question) => (q.choices ?? []).find((c) => c !== q.answer) ?? q.answer + 1;
 
 const cases = (Object.keys(SKILL_GAMES) as SkillId[]).flatMap((skillId) =>
-  gamesForSkill(skillId).flatMap((game) =>
-    getSkill(skillId).levels.map((level) => ({ skillId, gameId: game.id, level, Game: game.Component })),
+  SKILL_GAMES[skillId].flatMap((gameId) =>
+    getSkill(skillId).levels.map((level) => ({ skillId, gameId, level, Game: COMPONENTS[gameId] })),
   ),
 );
 
