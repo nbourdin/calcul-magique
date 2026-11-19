@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { playSound } from '@/app/audio';
 import { fr } from '@/i18n/fr';
 import { Icon } from './Icon';
 
@@ -20,6 +21,7 @@ const KEY =
 export function NumPad({ value, onChange, onSubmit, maxLength = 3, disabled = false }: NumPadProps) {
   const type = (d: number) => {
     if (disabled || value.length >= maxLength) return;
+    playSound('click');
     onChange(value === '0' ? String(d) : value + d);
   };
   const erase = () => !disabled && onChange(value.slice(0, -1));
