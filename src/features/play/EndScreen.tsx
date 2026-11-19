@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { playSound } from '@/app/audio';
 import { Link } from 'react-router-dom';
 import { getCharacter } from '@/assets/characters';
 import { pieceOrder } from '@/domain/rewards/puzzle';
@@ -41,6 +42,14 @@ export function EndScreen({ series, outcome, suggestBreak, onReplay }: EndScreen
   const [stage, setStage] = useState<Stage>('summary');
   const piece = outcome?.piece ?? null;
   const character = piece ? getCharacter(piece.characterId) : undefined;
+
+  // Étoiles puis pièce qui vole vers sa place.
+  useEffect(() => {
+    playSound('star');
+    if (!piece) return;
+    const timer = setTimeout(() => playSound('piece'), 900);
+    return () => clearTimeout(timer);
+  }, [piece]);
 
   if (stage === 'reveal' && character) {
     return (

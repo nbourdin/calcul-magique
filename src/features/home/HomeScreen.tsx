@@ -22,14 +22,15 @@ export function HomeScreen() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 py-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 pr-14">
         <Link
           to="/profils"
-          aria-label={fr.home.switchProfile}
+          title={fr.home.switchProfile}
           className="flex items-center gap-3 rounded-full pr-4 transition hover:bg-surface focus-visible:outline-4 focus-visible:outline-primary"
         >
           <Avatar id={profile.avatar} className="size-14" />
           <span className="text-2xl font-extrabold">{fr.home.welcomeName(profile.name)}</span>
+          <span className="sr-only">{fr.home.switchProfile}</span>
         </Link>
         <div className="flex items-center gap-3">
           <StarCount stars={rewards.stars} />
@@ -74,7 +75,7 @@ export function HomeScreen() {
               <section
                 key={world.id}
                 aria-label={unlocked ? fr.worlds[world.id] : fr.worlds.lockedLabel(fr.worlds[world.id])}
-                className={`flex flex-col gap-3 rounded-3xl p-4 ${WORLD_TONE[i]} ${unlocked ? '' : 'opacity-60'}`}
+                className={`flex flex-col gap-3 rounded-3xl p-4 ${WORLD_TONE[i]} ${unlocked ? '' : 'border-4 border-dashed border-ink/15'}`}
               >
                 <h2 className="text-xl font-extrabold">{fr.worlds[world.id]}</h2>
                 {unlocked ? (

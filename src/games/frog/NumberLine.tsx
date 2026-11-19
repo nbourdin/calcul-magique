@@ -66,7 +66,7 @@ export function NumberLine({ start, jumps, done, revealPosition = false }: Numbe
             <path
               d={`M${x1} 112 Q${(x1 + x2) / 2} ${112 - h} ${x2} 112`}
               fill="none"
-              stroke="#7b5cc4"
+              stroke="#6a4ab5"
               strokeWidth="3.5"
               strokeDasharray="6 5"
             />
@@ -76,7 +76,7 @@ export function NumberLine({ start, jumps, done, revealPosition = false }: Numbe
               textAnchor="middle"
               fontSize="20"
               fontWeight="800"
-              fill="#7b5cc4"
+              fill="#6a4ab5"
             >
               {jumpLabel(j)}
             </text>

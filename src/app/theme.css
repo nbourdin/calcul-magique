@@ -13,7 +13,7 @@
   --color-surface: #ffffff;
   --color-ink: #2e2a4f; /* texte principal, contraste AA sur tous les fonds */
   --color-ink-soft: #57527a;
-  --color-primary: #7b5cc4; /* lavande foncée : boutons */
+  --color-primary: #6a4ab5; /* lavande foncée : boutons */
   --color-primary-soft: #e8defa;
   --color-success: #2f8f5b;
   --color-success-soft: #dcf3e6;
@@ -185,19 +185,43 @@ body {
   animation: pop 300ms ease-out forwards !important;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .bubble {
-    animation: none;
+/*
+ * Mouvement réduit (PRD §10) : pas de déplacement, de rebond ni d'oscillation ;
+ * les apparitions deviennent de simples fondus.
+ */
+@keyframes fade-in {
+  from {
+    opacity: 0;
   }
 }
-
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .anim-pop-in,
+  .anim-piece-fly {
+    animation: fade-in 300ms ease-out both !important;
+  }
+  .anim-wiggle,
+  .anim-glow,
+  .anim-shake,
+  .bubble {
+    animation: none !important;
+  }
+  .bubble-pop {
+    animation: fade-out 250ms ease-out forwards !important;
+  }
+  .chrono-fill {
+    animation: fade-in 600ms ease-out both !important;
+    width: 100%;
+    opacity: 0.6;
   }
 }

@@ -1,0 +1,3 @@
+# Application privée pour enfants : pas d'indexation.
+User-agent: *
+Disallow: /

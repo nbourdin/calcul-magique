@@ -5,9 +5,9 @@ PWA de mini-jeux de calcul mental pour une élève de CE1. La spécification com
 
 ## Stack
 
-Vite + React 18 + TypeScript strict · React Router (hash) · Zustand · Dexie (IndexedDB) · Tailwind CSS v4 (thème en variables CSS dans
+Vite + React 18 + TypeScript strict · React Router (hash) · Zustand · Dexie (IndexedDB) · Howler · Tailwind CSS v4 (thème en variables CSS dans
 `src/app/theme.css`) · vite-plugin-pwa (Workbox, précache de tout) · Vitest + Testing Library.
-À ajouter quand le jalon en a besoin : Framer Motion, Howler, Playwright.
+Pas de Framer Motion (animations CSS) ni de Playwright (abandonné à la demande de l'utilisateur).
 
 TypeScript est épinglé en `~6.0` : typescript-eslint ne supporte pas encore TS 7.
 
@@ -56,7 +56,12 @@ La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et 
 - Erreurs en orange doux (`help`), jamais de rouge. Couleur jamais seule porteuse d'information.
 - Consignes ≥ 20 px (`text-instruction`), nombres ≥ 36 px (`text-number`).
 - Cibles tactiles : 64 px pour les réponses (`min-h-touch`), 48 px ailleurs (`min-h-tap`).
-- Respecter `prefers-reduced-motion`.
+- Respecter `prefers-reduced-motion` : les classes `anim-*` deviennent des fondus (voir `theme.css`).
+- Violet principal `#6a4ab5` : contraste AA sur tous les fonds (l'ancien `#7b5cc4` échouait sur lavande).
+- Sons : `playSound()` de `src/app/audio.ts` (Howler chargé au premier son, fichiers dans
+  `src/assets/sounds`, jamais de son négatif). Voix : `ListenButton` si le réglage « voix » est activé.
+- Écrans secondaires et jeux chargés à la demande (`src/app/lazyScreens.tsx`, `GAMES`) ; tout reste
+  précaché par le service worker.
 
 ## Façon de travailler
 

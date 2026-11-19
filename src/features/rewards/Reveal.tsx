@@ -1,9 +1,13 @@
+import { useEffect } from 'react';
+import { playSound } from '@/app/audio';
 import type { Character } from '@/assets/characters';
 import { fr } from '@/i18n/fr';
 import { Button } from '@/ui/Button';
 
 /** Révélation du personnage complété : courte, passable d'un tap. */
 export function Reveal({ character, onContinue }: { character: Character; onContinue: () => void }) {
+  useEffect(() => playSound('complete'), []);
+
   return (
     <section
       className="flex flex-col items-center gap-5 text-center"

@@ -7,7 +7,7 @@ const art: Record<AvatarId, { bg: string; fg: string; d: string }> = {
     fg: '#f5b82e',
     d: 'M32 10l6.5 13.5 14.8 1.9-10.9 10.2 2.8 14.7L32 43l-13.2 7.3 2.8-14.7-10.9-10.2 14.8-1.9z',
   },
-  moon: { bg: '#e8defa', fg: '#7b5cc4', d: 'M38 12a20 20 0 1 0 14 34 16 16 0 1 1-14-34z' },
+  moon: { bg: '#e8defa', fg: '#6a4ab5', d: 'M38 12a20 20 0 1 0 14 34 16 16 0 1 1-14-34z' },
   flower: {
     bg: '#fbe0ea',
     fg: '#e76f8a',

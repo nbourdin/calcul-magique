@@ -163,7 +163,7 @@ export function ShopGame({ question, active, onAnswer }: GameProps) {
                 <path
                   d={ITEM_ART[itemIndex]}
                   fill="#e8defa"
-                  stroke="#7b5cc4"
+                  stroke="#6a4ab5"
                   strokeWidth="5"
                   strokeLinecap="round"
                   strokeLinejoin="round"

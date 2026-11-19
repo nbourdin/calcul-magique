@@ -29,7 +29,7 @@ export function AlbumScreen() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 py-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 pr-14">
         <Link
           to="/"
           aria-label={fr.album.back}

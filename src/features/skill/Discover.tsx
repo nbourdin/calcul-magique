@@ -6,6 +6,7 @@ import type { SkillId } from '@/domain/types';
 import { frogJumps } from '@/games/frog/jumps';
 import { NumberLine } from '@/games/frog/NumberLine';
 import { House } from '@/games/house10/House';
+import { ListenButton } from '@/features/profile/ListenButton';
 import { fr } from '@/i18n/fr';
 import { Button } from '@/ui/Button';
 import { Equation } from '@/ui/Equation';
@@ -76,7 +77,10 @@ export function Discover({ skillId, onDone }: { skillId: SkillId; onDone: () => 
   return (
     <section className="flex w-full flex-col items-center gap-5 text-center">
       <h1 className="text-3xl font-extrabold text-primary">{fr.discover.title}</h1>
-      <p className="text-2xl font-bold">{fr.discover.intro[skillId]}</p>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <p className="text-2xl font-bold">{fr.discover.intro[skillId]}</p>
+        <ListenButton text={fr.discover.intro[skillId]} />
+      </div>
       <Equation
         display={question.display}
         wording={question.wording}

@@ -108,7 +108,7 @@ export function SettingsPanel({
         />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field title={t.sound} help={t.soon}>
+        <Field title={t.sound} help={t.soundHelp}>
           <Segmented
             label={t.sound}
             value={s.sound ? 'on' : 'off'}
@@ -116,7 +116,7 @@ export function SettingsPanel({
             onChange={(v) => void save({ sound: v === 'on' })}
           />
         </Field>
-        <Field title={t.voice} help={t.soon}>
+        <Field title={t.voice} help={t.voiceHelp}>
           <Segmented
             label={t.voice}
             value={s.voice ? 'on' : 'off'}

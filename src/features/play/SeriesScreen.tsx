@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { answeredCount, currentItem } from '@/domain/engine/run';
 import { isSkillAvailable } from '@/domain/skills';
 import type { Level, SkillId } from '@/domain/types';
+import { playSound } from '@/app/audio';
 import { CHARACTER_IDS } from '@/assets/characters';
+import { ListenButton } from '@/features/profile/ListenButton';
 import { useProfile } from '@/features/profile/profileStore';
 import { gamesForSkill, isGameId } from '@/games';
 import { fr } from '@/i18n/fr';
@@ -12,6 +14,7 @@ import { EndScreen } from './EndScreen';
 import { HelpPanel } from './HelpPanel';
 import { useSession } from './sessionStore';
 import { ChronoBar } from './ChronoBar';
+import { spokenQuestion } from './speech';
 import { StopDialog } from './StopDialog';
 
 /** Délai avant la question suivante après une bonne réponse (PRD §5). */
@@ -66,6 +69,11 @@ export function SeriesScreen() {
   }, [status, reloadProfile]);
 
   const phase = run?.phase;
+  // Son de réussite ; jamais de son négatif après une erreur (PRD §5).
+  useEffect(() => {
+    if (phase === 'success') playSound('correct');
+  }, [phase, run]);
+
   useEffect(() => {
     if (phase !== 'success' || stopAsked) return;
     const timer = setTimeout(() => void next(), SUCCESS_DELAY_MS);
@@ -125,7 +133,7 @@ export function SeriesScreen() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 py-4">
-      <header className="flex items-center gap-4">
+      <header className="flex items-center gap-4 pr-14">
         <button
           type="button"
           onClick={() => setStopAsked(true)}
@@ -149,20 +157,23 @@ export function SeriesScreen() {
             />
           ))}
         </div>
+        <ListenButton text={spokenQuestion(item.question)} />
       </header>
 
       {chronoMode === 'on' && run.phase === 'question' && !stopAsked && (
         <ChronoBar key={`${item.question.id}-${item.attempt}`} />
       )}
 
-      <Game
-        key={`${item.question.id}-${item.attempt}`}
-        question={item.question}
-        attempt={item.attempt}
-        active={run.phase === 'question' && !stopAsked}
-        progress={done / run.questionCount}
-        onAnswer={(correct, ms) => void answer(correct, ms)}
-      />
+      <Suspense fallback={<p className="text-center text-instruction text-ink-soft">{fr.play.loading}</p>}>
+        <Game
+          key={`${item.question.id}-${item.attempt}`}
+          question={item.question}
+          attempt={item.attempt}
+          active={run.phase === 'question' && !stopAsked}
+          progress={done / run.questionCount}
+          onAnswer={(correct, ms) => void answer(correct, ms)}
+        />
+      </Suspense>
 
       {run.phase === 'success' && (
         <p

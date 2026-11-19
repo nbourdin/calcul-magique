@@ -12,7 +12,7 @@ export const fr = {
     welcomeName: (name: string) => `Coucou ${name} !`,
     album: 'Mon album',
     map: 'Carte des mondes',
-    puzzleProgress: (n: number, total: number) => `${n} pièces sur ${total}`,
+    puzzleProgress: (n: number, total: number) => `${n} pièce${n > 1 ? 's' : ''} sur ${total}`,
     puzzleOf: (name: string) => `Le puzzle de ${name}`,
     chooseNext: 'Choisis ton prochain ami',
     switchProfile: 'Changer de joueur',
@@ -93,7 +93,7 @@ export const fr = {
     woke: 'Ta flamme se réveille !',
   },
   puzzle: {
-    label: (name: string, n: number) => `Puzzle de ${name} : ${n} pièces sur 9`,
+    label: (name: string, n: number) => `Puzzle de ${name} : ${n} pièce${n > 1 ? 's' : ''} sur 9`,
     newPiece: 'Une nouvelle pièce !',
     mystery: 'Personnage mystère',
   },
@@ -162,7 +162,8 @@ export const fr = {
     race: {
       name: 'La Course des doubles',
       instruction: 'Choisis le bon chemin !',
-      lane: (n: number, key: number) => `Chemin ${key} : ${n}`,
+      lanePrefix: 'Chemin',
+      lane: (n: number, key: number) => `Chemin ${key} ${n}`,
       pony: 'Le poney',
     },
     bubbles: {
@@ -285,8 +286,9 @@ export const fr = {
       chronoHelp: 'Jamais de limite de temps : la rapidité rapporte seulement une étoile bonus.',
       chronoModes: { off: 'Désactivé', soft: 'Doux (bonus discret)', on: 'Actif (sablier visible)' },
       sound: 'Sons',
+      soundHelp: 'L’enfant peut aussi couper le son avec le bouton haut-parleur.',
       voice: 'Voix (lecture des consignes)',
-      soon: 'Disponible dans la prochaine version.',
+      voiceHelp: 'Ajoute un bouton « Écouter » qui lit la question à voix haute.',
       on: 'Activé',
       off: 'Coupé',
       startLevel: 'Niveau de départ des nouvelles compétences',
@@ -322,6 +324,19 @@ export const fr = {
       resetDone: 'Progression effacée.',
       privacy: 'Aucune donnée ne quitte cet appareil.',
     },
+  },
+  sound: {
+    mute: 'Couper le son',
+    unmute: 'Remettre le son',
+  },
+  speech: {
+    listen: 'Écouter',
+    ops: { '+': 'plus', '−': 'moins', '×': 'fois' },
+    result: (a: number, op: string, b: number) => `${a} ${op} ${b}, ça fait combien ?`,
+    missingB: (a: number, op: string, r: number) => `${a} ${op} combien, ça fait ${r} ?`,
+    missingA: (op: string, b: number, r: number) => `Combien ${op} ${b}, ça fait ${r} ?`,
+    double: (n: number) => `Quel est le double de ${n} ?`,
+    half: (n: number) => `Quelle est la moitié de ${n} ?`,
   },
   errors: {
     title: 'Oups, petit souci !',

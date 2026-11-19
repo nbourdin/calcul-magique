@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { playSound } from '@/app/audio';
 import { evaluate } from '@/domain/display';
 import { fr } from '@/i18n/fr';
 import { Equation } from '@/ui/Equation';
@@ -38,6 +39,7 @@ export function BubblesGame({ question, active, onAnswer }: GameProps) {
   const pop = (value: number) => {
     if (!active || answered) return;
     setPicked(value);
+    if (value === question.answer) playSound('bubble');
     onAnswer(value === question.answer, elapsed());
   };
 

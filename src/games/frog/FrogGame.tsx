@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { playSound } from '@/app/audio';
 import { fr } from '@/i18n/fr';
 import { Equation } from '@/ui/Equation';
 import { NumPad } from '@/ui/NumPad';
@@ -32,6 +33,10 @@ export function FrogGame({ question, active, onAnswer }: GameProps) {
     const labels = [...new Set(jumps.map(jumpLabel))];
     return question.id.length % 2 === 0 ? labels : [...labels].reverse();
   }, [jumps, question.id]);
+
+  useEffect(() => {
+    if (done > 0) playSound('jump');
+  }, [done]);
 
   // Après la réponse, la grenouille rejoue les sauts (aide ou célébration).
   useEffect(() => {

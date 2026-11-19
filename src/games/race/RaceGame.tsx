@@ -88,7 +88,6 @@ export function RaceGame({ question, active, progress = 0, onAnswer }: GameProps
               type="button"
               disabled={!active || answered}
               onClick={() => choose(i)}
-              aria-label={fr.games.race.lane(value, i + 1)}
               className={`absolute right-2 flex min-h-touch min-w-24 items-center justify-center gap-2 rounded-2xl border-4 px-4 text-number font-extrabold shadow-[0_5px_0_rgb(0_0_0/0.15)] transition focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 picked === value
                   ? correct
@@ -97,10 +96,9 @@ export function RaceGame({ question, active, progress = 0, onAnswer }: GameProps
                   : 'border-ink/20 bg-surface text-ink'
               }`}
             >
-              <span className="text-base font-bold text-ink-soft" aria-hidden="true">
-                {i + 1}
-              </span>
-              {value}
+              {/* Nom accessible « Chemin 1 22 » : il commence par le texte visible (touche puis valeur). */}
+              <span className="sr-only">{fr.games.race.lanePrefix}</span>{' '}
+              <span className="text-base font-bold text-ink-soft">{i + 1}</span> {value}
             </button>
           </div>
         ))}

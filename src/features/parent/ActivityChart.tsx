@@ -40,7 +40,7 @@ export function ActivityChart({ days }: { days: readonly DayActivity[] }) {
           ? fr.parent.activityDay(dayLabel(active.day), minutesText(active.minutes), active.series)
           : ' '}
       </p>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={fr.parent.activityTitle}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="group" aria-label={fr.parent.activityTitle}>
         {[0, top / 2, top].map((t) => (
           <g key={t}>
             <line
@@ -64,6 +64,7 @@ export function ActivityChart({ days }: { days: readonly DayActivity[] }) {
             <g
               key={d.day}
               tabIndex={0}
+              role="img"
               onMouseEnter={() => setHover(i)}
               onMouseLeave={() => setHover(null)}
               onFocus={() => setHover(i)}
@@ -76,7 +77,7 @@ export function ActivityChart({ days }: { days: readonly DayActivity[] }) {
               {h > 0 && (
                 <path
                   d={`M${x} ${y(0)} V${y(d.minutes) + r} Q${x} ${y(d.minutes)} ${x + r} ${y(d.minutes)} H${x + barW - r} Q${x + barW} ${y(d.minutes)} ${x + barW} ${y(d.minutes) + r} V${y(0)} Z`}
-                  fill="#7b5cc4"
+                  fill="#6a4ab5"
                   opacity={hover === null || hover === i ? 1 : 0.45}
                 />
               )}
