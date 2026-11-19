@@ -1,0 +1,82 @@
+// @vitest-environment jsdom
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { createRng } from '@/domain/rng';
+import { generateQuestion, getSkill } from '@/domain/skills';
+import type { GameId, Question, SkillId } from '@/domain/types';
+import { fr } from '@/i18n/fr';
+import { frogJumps, jumpLabel } from './frog/jumps';
+import { gamesForSkill, SKILL_GAMES } from './index';
+
+/** Tape un nombre au clavier puis Entrée (pavé numérique). */
+function typeNumber(n: number) {
+  for (const d of String(n)) fireEvent.keyDown(window, { key: d });
+  fireEvent.keyDown(window, { key: 'Enter' });
+}
+
+/** Comment répondre `value` dans chaque jeu, comme le ferait l'enfant. */
+const answerWith: Record<GameId, (q: Question, value: number) => void> = {
+  house10: (q, value) => {
+    if (q.level === 1) fireEvent.click(screen.getByRole('button', { name: fr.play.choiceLabel(value) }));
+    else typeNumber(value);
+  },
+  frog: (q, value) => {
+    if (q.level === 1) {
+      for (const j of frogJumps(q).jumps)
+        fireEvent.click(screen.getByRole('button', { name: fr.games.frog.jump(jumpLabel(j)) }));
+    }
+    typeNumber(value);
+  },
+  race: (q, value) => {
+    const index = (q.choices ?? []).indexOf(value);
+    fireEvent.click(screen.getByRole('button', { name: fr.games.race.lane(value, index + 1) }));
+  },
+  bubbles: (_q, value) =>
+    fireEvent.click(screen.getByRole('button', { name: fr.games.bubbles.bubble(value) })),
+  shop: (_q, value) => {
+    let left = value;
+    for (const coin of [10, 5, 2, 1]) {
+      while (left >= coin) {
+        const button = screen.queryByRole('button', { name: fr.games.shop.coin(coin) });
+        if (!button) break;
+        fireEvent.click(button);
+        left -= coin;
+      }
+    }
+    fireEvent.click(screen.getByRole('button', { name: fr.numpad.submit }));
+  },
+};
+
+const wrongValue = (q: Question) => (q.choices ?? []).find((c) => c !== q.answer) ?? q.answer + 1;
+
+const cases = (Object.keys(SKILL_GAMES) as SkillId[]).flatMap((skillId) =>
+  gamesForSkill(skillId).flatMap((game) =>
+    getSkill(skillId).levels.map((level) => ({ skillId, gameId: game.id, level, Game: game.Component })),
+  ),
+);
+
+afterEach(cleanup);
+
+describe('contrat des mini-jeux (PRD §6)', () => {
+  it('chaque compétence propose au moins 2 jeux', () => {
+    for (const games of Object.values(SKILL_GAMES)) expect(games.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it.each(cases)(
+    '$gameId × $skillId niveau $level : 10 questions, onAnswer à chaque réponse',
+    ({ skillId, gameId, level, Game }) => {
+      const rng = createRng(42);
+      for (let i = 0; i < 10; i++) {
+        const question = generateQuestion(skillId, level, rng);
+        const onAnswer = vi.fn();
+        const wrong = i % 3 === 2; // une réponse sur trois est fausse
+        const { unmount } = render(
+          <Game key={i} question={question} attempt={1} active progress={i / 10} onAnswer={onAnswer} />,
+        );
+        answerWith[gameId](question, wrong ? wrongValue(question) : question.answer);
+        expect(onAnswer).toHaveBeenCalledTimes(1);
+        expect(onAnswer).toHaveBeenCalledWith(!wrong, expect.any(Number));
+        unmount();
+      }
+    },
+  );
+});

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { GameId, Question, SkillId } from '@/domain/types';
+import type { GameId, Question } from '@/domain/types';
 
 /**
  * Contrat commun des mini-jeux : un jeu ne connaît que la question courante
@@ -12,11 +12,13 @@ export interface GameProps {
   attempt: 1 | 2;
   /** Faux pendant le retour (bravo / aide) : le jeu fige sa saisie. */
   active: boolean;
+  /** Avancement de la série, de 0 à 1 (ex. position du poney). */
+  progress?: number;
   onAnswer: (correct: boolean, responseMs: number) => void;
 }
 
+/** Les compétences compatibles sont déclarées dans `SKILL_GAMES` (src/games/index.ts). */
 export interface GameDefinition {
   id: GameId;
-  skills: readonly SkillId[];
   Component: ComponentType<GameProps>;
 }
