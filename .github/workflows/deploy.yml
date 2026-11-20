@@ -11,10 +11,11 @@ permissions:
   pages: write
   id-token: write
 
-# Un seul déploiement à la fois ; le plus récent l'emporte.
+# Un seul déploiement à la fois : celui en cours va au bout, le suivant attend son tour
+# (pas de déploiement « annulé » quand deux pushs se suivent de près).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
