@@ -8,7 +8,7 @@ import { AidButton } from '../AidButton';
 import { useAid } from '../useAid';
 import { useResponseTimer } from '../useResponseTimer';
 
-type Money = 1 | 2 | 5 | 10 | 20;
+import { cashDrawer, seedOf, type Money } from './cash';
 
 function MoneyArt({ value, className = 'h-16' }: { value: Money; className?: string }) {
   if (value >= 5) {
@@ -103,7 +103,12 @@ export function ShopGame({ question, active, aid, onAnswer }: GameProps) {
   const help = useAid(aid, question.level);
   const note = evaluate(question.display);
   const price = question.display.missing === 'a' ? (question.display.b ?? 0) : question.display.a;
-  const coins: Money[] = note > 10 ? [1, 2, 5, 10] : [1, 2, 5];
+  const { available: coins, missing } = cashDrawer(
+    note,
+    question.answer,
+    question.level,
+    seedOf(question.id),
+  );
   const itemIndex = (price + note) % ITEM_ART.length;
   // Un client différent selon la question, pris dans l'album.
   const customer = CHARACTERS[(price * 3 + note) % Math.max(1, CHARACTERS.length)];
@@ -232,7 +237,9 @@ export function ShopGame({ question, active, aid, onAnswer }: GameProps) {
       </div>
 
       <div className="mt-auto flex w-full flex-col items-center gap-3 pb-4">
-        <p className="text-lg font-bold text-ink-soft">{fr.games.shop.coinsHint}</p>
+        <p className={`text-lg font-bold ${missing ? 'text-help' : 'text-ink-soft'}`}>
+          {missing ? fr.games.shop.coinsMissing(missing) : fr.games.shop.coinsHint}
+        </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           {coins.map((c) => (
             <button
@@ -252,6 +259,19 @@ export function ShopGame({ question, active, aid, onAnswer }: GameProps) {
               </span>
             </button>
           ))}
+          {/* Monnaie épuisée : visible mais barrée, pour comprendre pourquoi elle manque. */}
+          {missing && (
+            <span
+              role="img"
+              aria-label={fr.games.shop.noCoin(missing)}
+              className="relative rounded-2xl border-4 border-dashed border-ink/20 p-2 opacity-50 grayscale"
+            >
+              <MoneyArt value={missing} />
+              <svg viewBox="0 0 10 10" className="absolute inset-0 size-full" aria-hidden="true">
+                <path d="M1 9L9 1" stroke="#c96a12" strokeWidth="0.8" strokeLinecap="round" />
+              </svg>
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap justify-center gap-3">
           <button

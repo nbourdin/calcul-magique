@@ -208,6 +208,8 @@ export const fr = {
       tray: (n: number) => `Tu rends ${n} €`,
       trayEmpty: 'La monnaie que tu rends',
       coinsHint: 'Touche les pièces pour rendre la monnaie',
+      coinsMissing: (n: number) => `Plus de ${n} € : rends autrement !`,
+      noCoin: (n: number) => `Plus de ${n} € dans la caisse`,
       submit: 'Je rends',
       euros: (n: number) => `${n} €`,
     },
