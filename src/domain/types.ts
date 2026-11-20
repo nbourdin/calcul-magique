@@ -52,7 +52,7 @@ export interface Question {
   strategy?: { steps: string[]; visual: StrategyVisual };
 }
 
-export type GameId = 'house10' | 'frog' | 'bubbles' | 'race' | 'shop' | 'train';
+export type GameId = 'house10' | 'frog' | 'bubbles' | 'race' | 'shop' | 'train' | 'butterfly';
 
 export type LeitnerBox = 0 | 1 | 2 | 3 | 4;
 

@@ -51,6 +51,11 @@ Déploiement : chaque push sur `main` est vérifié puis publié sur GitHub Page
   `SkillProgress.levelSince` comptent.
 - Calcul posé : `src/domain/column.ts` (colonnes, retenues, emprunts) ; jeu « Le Petit Train »
   (`src/games/train`), saisie des unités vers la gauche (`entry.ts`).
+- Doubles : jeu « Le Papillon des doubles » (`src/games/butterfly`, ailes identiques, miroir magique,
+  +1 pour un presque-double). « La Course du poney » (`race`) est le jeu générique à 3 propositions.
+- Aides visuelles (bande de la boutique, maison, sauts en pointillés, points du papillon) : réglage parent
+  `visualAid` (niveau 1 / sur demande / cachées), passé aux jeux par `GameProps.aid` (`useAid`, `AidButton`).
+- Boutique : à partir du niveau 2, une pièce utile manque une question sur deux (`shop/cash.ts`).
 - Jeux compatibles par compétence : `SKILL_GAMES` dans `src/games/index.ts`. Tout nouveau jeu doit passer
   `src/games/contract.test.tsx` (10 questions par compétence et niveau, `onAnswer` à chaque réponse).
 - Données : IndexedDB `calcul-magique` (profils, états des faits, tentatives, séries, puzzles, récompenses) ;

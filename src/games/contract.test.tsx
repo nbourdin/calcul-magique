@@ -6,6 +6,7 @@ import type { GameId, Question, SkillId } from '@/domain/types';
 import { fr } from '@/i18n/fr';
 import { frogJumps, jumpLabel } from './frog/jumps';
 import { BubblesGame } from './bubbles/BubblesGame';
+import { ButterflyGame } from './butterfly/ButterflyGame';
 import { FrogGame } from './frog/FrogGame';
 import { House10Game } from './house10/House10Game';
 import { SKILL_GAMES } from './index';
@@ -22,6 +23,7 @@ const COMPONENTS: Record<GameId, (props: GameProps) => React.JSX.Element> = {
   race: RaceGame,
   shop: ShopGame,
   train: TrainGame,
+  butterfly: ButterflyGame,
 };
 
 /** Tape un nombre au clavier puis Entrée (pavé numérique). */
@@ -64,6 +66,12 @@ const answerWith: Record<GameId, (q: Question, value: number) => void> = {
       }
     }
     fireEvent.click(screen.getByRole('button', { name: fr.games.shop.submit }));
+  },
+  butterfly: (q, value) => {
+    const mirror = screen.queryByRole('button', { name: fr.games.butterfly.mirror });
+    if (mirror) fireEvent.click(mirror);
+    if (q.level === 1) fireEvent.click(screen.getByRole('button', { name: fr.play.choiceLabel(value) }));
+    else typeNumber(value);
   },
   train: (q, value) => {
     // Calcul posé : une case par chiffre du résultat, remplie depuis les unités.

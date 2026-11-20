@@ -28,7 +28,7 @@ function Pony({ tripped }: { tripped: boolean }) {
 }
 
 /**
- * Jeu 4 — La Course des doubles (doubles, presque-doubles, tables… toute question à 3 propositions).
+ * Jeu 4 — La Course du poney (toute question à 3 propositions : doubles, tables, +9, défi du jour…).
  * Le poney avance d'une foulée par bonne réponse ; une erreur le fait trébucher gentiment.
  * Au clavier : touches 1, 2, 3.
  */

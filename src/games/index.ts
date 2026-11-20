@@ -26,6 +26,10 @@ export const GAMES: Record<GameId, GameDefinition> = {
     id: 'shop',
     Component: lazy(() => import('./shop/ShopGame').then((m) => ({ default: m.ShopGame }))),
   },
+  butterfly: {
+    id: 'butterfly',
+    Component: lazy(() => import('./butterfly/ButterflyGame').then((m) => ({ default: m.ButterflyGame }))),
+  },
   train: {
     id: 'train',
     Component: lazy(() => import('./train/TrainGame').then((m) => ({ default: m.TrainGame }))),
@@ -42,8 +46,8 @@ export const SKILL_GAMES: Record<SkillId, readonly GameId[]> = {
   C10: ['house10', 'bubbles', 'shop'],
   C20: ['house10', 'bubbles', 'shop'],
   CDS: ['house10', 'bubbles'],
-  DBL: ['race', 'frog'],
-  PDB: ['race', 'frog'],
+  DBL: ['butterfly', 'race', 'frog'],
+  PDB: ['butterfly', 'race', 'frog'],
   TAD: ['frog', 'race'],
   P9: ['frog', 'race'],
   M9: ['frog', 'race'],

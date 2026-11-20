@@ -186,7 +186,7 @@ export const fr = {
       line: (n: number) => `La grenouille est sur ${n}`,
     },
     race: {
-      name: 'La Course des doubles',
+      name: 'La Course du poney',
       instruction: 'Choisis le bon chemin !',
       lanePrefix: 'Chemin',
       lane: (n: number, key: number) => `Chemin ${key} ${n}`,
@@ -212,6 +212,17 @@ export const fr = {
       noCoin: (n: number) => `Plus de ${n} € dans la caisse`,
       submit: 'Je rends',
       euros: (n: number) => `${n} €`,
+    },
+    butterfly: {
+      name: 'Le Papillon des doubles',
+      mirrorHint: 'Touche le miroir magique !',
+      mirror: 'Miroir magique',
+      double: 'Combien sur les deux ailes ?',
+      near: 'Le double, puis encore 1 !',
+      half: 'Combien sur chaque aile ?',
+      wingsLabel: (left: number, right: number | null, plusOne: boolean) =>
+        `Papillon : ${left} sur une aile, ${right === null ? 'l’autre aile à remplir' : `${right} sur l’autre`}${plusOne ? ', plus 1' : ''}`,
+      halfLabel: (total: number) => `Papillon : ${total} à partager entre les deux ailes`,
     },
     train: {
       name: 'Le Petit Train',
