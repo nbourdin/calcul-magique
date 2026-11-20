@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { GameId, Question } from '@/domain/types';
+import type { AidMode } from './aid';
 
 /**
  * Contrat commun des mini-jeux : un jeu ne connaît que la question courante
@@ -14,6 +15,8 @@ export interface GameProps {
   active: boolean;
   /** Avancement de la série, de 0 à 1 (ex. position du poney). */
   progress?: number;
+  /** Aide visuelle (bande, fenêtres, sauts en pointillés) ; par défaut, au niveau 1 seulement. */
+  aid?: AidMode;
   onAnswer: (correct: boolean, responseMs: number) => void;
 }
 

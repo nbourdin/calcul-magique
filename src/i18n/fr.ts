@@ -247,6 +247,7 @@ export const fr = {
     helpLast: 'On la reverra bientôt.',
     helpContinue: 'On continue',
     missing: 'nombre à trouver',
+    showAid: 'Montre-moi',
   },
   numpad: {
     label: 'Pavé numérique',
@@ -366,6 +367,10 @@ export const fr = {
       voiceHelp: 'Ajoute un bouton « Écouter » qui lit la question à voix haute.',
       on: 'Activé',
       off: 'Coupé',
+      visualAid: 'Aides visuelles',
+      visualAidHelp:
+        'Bande de cases de la boutique, fenêtres de la maison, sauts de la grenouille. « Sur demande » : l’enfant touche « Montre-moi ». Après une réponse, l’aide s’affiche toujours pour expliquer.',
+      visualAidModes: { level: 'Au niveau 1', ask: 'Sur demande', off: 'Cachées' },
       startLevel: 'Niveau de départ des nouvelles compétences',
       levels: 'Niveau par compétence',
       levelLabel: (skill: string, level: number) => `${skill} : niveau ${level}`,

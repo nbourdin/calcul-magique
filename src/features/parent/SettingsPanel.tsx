@@ -125,6 +125,14 @@ export function SettingsPanel({
           />
         </Field>
       </div>
+      <Field title={t.visualAid} help={t.visualAidHelp}>
+        <Segmented
+          label={t.visualAid}
+          value={s.visualAid}
+          options={(['level', 'ask', 'off'] as const).map((m) => ({ value: m, label: t.visualAidModes[m] }))}
+          onChange={(visualAid) => void save({ visualAid })}
+        />
+      </Field>
       <Field title={t.startLevel}>
         <Segmented
           label={t.startLevel}

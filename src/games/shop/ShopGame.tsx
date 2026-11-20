@@ -4,6 +4,8 @@ import { evaluate } from '@/domain/display';
 import { fr } from '@/i18n/fr';
 import { Icon } from '@/ui/Icon';
 import type { GameProps } from '../types';
+import { AidButton } from '../AidButton';
+import { useAid } from '../useAid';
 import { useResponseTimer } from '../useResponseTimer';
 
 type Money = 1 | 2 | 5 | 10 | 20;
@@ -92,11 +94,13 @@ function ChangeStrip({ price, given, note }: { price: number; given: number; not
  * Jeu 5 — La Boutique de la fée (compléments à 10 et à 20 en contexte).
  * L'enfant tient la boutique : la fée achète un objet et paie avec un billet de 10 ou 20 €,
  * l'enfant lui rend la monnaie. L'opération « prix + monnaie = billet » se remplit au fil des pièces.
- * Niveau 1 : une bande de cases montre le prix et la monnaie jusqu'au billet.
+ * Aide visuelle (niveau 1 par défaut, réglable) : une bande de cases montre le prix et la
+ * monnaie jusqu'au billet ; après la réponse, elle montre la bonne monnaie.
  * Au clavier : 1, 2, 5 (et 0 pour 10 €) ajoutent, Retour arrière retire, Entrée valide.
  */
-export function ShopGame({ question, active, onAnswer }: GameProps) {
+export function ShopGame({ question, active, aid, onAnswer }: GameProps) {
   const elapsed = useResponseTimer();
+  const help = useAid(aid, question.level);
   const note = evaluate(question.display);
   const price = question.display.missing === 'a' ? (question.display.b ?? 0) : question.display.a;
   const coins: Money[] = note > 10 ? [1, 2, 5, 10] : [1, 2, 5];
@@ -197,7 +201,15 @@ export function ShopGame({ question, active, onAnswer }: GameProps) {
         <span>{fr.games.shop.euros(note)}</span>
       </p>
 
-      {question.level === 1 && <ChangeStrip price={price} given={total} note={note} />}
+      {help.visible || answered ? (
+        <ChangeStrip
+          price={price}
+          given={answered ? (correct ? total : question.answer) : total}
+          note={note}
+        />
+      ) : (
+        help.canAsk && <AidButton onClick={help.ask} disabled={locked} />
+      )}
 
       {/* Monnaie rendue : on retire une pièce en la touchant. */}
       <div className="flex min-h-20 w-full max-w-xl flex-wrap items-center justify-center gap-2 rounded-3xl bg-surface/70 p-3">

@@ -70,6 +70,13 @@ export interface FactState {
   introducedAt: number;
 }
 
+/**
+ * Aides visuelles des jeux (bande de la boutique, fenêtres de la maison, sauts en pointillés) :
+ * « level » = au niveau 1 seulement ; « ask » = cachées, l'enfant peut les demander ;
+ * « off » = cachées, montrées seulement après la réponse.
+ */
+export type VisualAidSetting = 'level' | 'ask' | 'off';
+
 export interface Settings {
   sessionMinutes: 5 | 10 | 15 | 20;
   seriesBeforeBreak: number;
@@ -79,6 +86,7 @@ export interface Settings {
   startLevel: Level;
   /** « Tout débloquer » : tous les mondes ouverts, sans attendre la maîtrise. */
   unlockAll: boolean;
+  visualAid: VisualAidSetting;
 }
 
 export interface Profile {

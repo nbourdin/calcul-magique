@@ -5,6 +5,8 @@ import { Equation } from '@/ui/Equation';
 import { Icon } from '@/ui/Icon';
 import { NumPad } from '@/ui/NumPad';
 import type { GameProps } from '../types';
+import { AidButton } from '../AidButton';
+import { useAid } from '../useAid';
 import { useResponseTimer } from '../useResponseTimer';
 import { frogJumps, jumpLabel, type Jump } from './jumps';
 import { NumberLine } from './NumberLine';
@@ -22,8 +24,9 @@ function stepInstruction(j: Jump): string {
  * Niveau 1 : l'enfant fait les sauts un par un, dans l'ordre, puis lit le nombre d'arrivée.
  * Niveaux 2-3 : l'enfant prévoit l'arrivée ; la grenouille saute ensuite (bravo ou aide).
  */
-export function FrogGame({ question, active, onAnswer }: GameProps) {
+export function FrogGame({ question, active, aid, onAnswer }: GameProps) {
   const elapsed = useResponseTimer();
+  const help = useAid(aid, question.level);
   const { start, jumps } = useMemo(() => frogJumps(question), [question]);
   const guided = question.level === 1;
   const [done, setDone] = useState(0);
@@ -73,7 +76,15 @@ export function FrogGame({ question, active, onAnswer }: GameProps) {
       <p className="text-center text-instruction font-bold" aria-live="polite">
         {instruction}
       </p>
-      <NumberLine start={start} jumps={jumps} done={done} revealPosition={answered} showPlan={!answered} />
+      {/* Au niveau 1, les boutons de saut sont le jeu : le trajet reste dessiné. */}
+      <NumberLine
+        start={start}
+        jumps={jumps}
+        done={done}
+        revealPosition={answered}
+        showPlan={!answered && (guided || help.visible)}
+      />
+      {!guided && !answered && help.canAsk && <AidButton onClick={help.ask} disabled={!active} />}
 
       {guided && (
         // Les sauts du trajet, dans l'ordre : faits (✓), à faire maintenant, puis les suivants.

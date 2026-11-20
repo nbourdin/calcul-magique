@@ -4,6 +4,8 @@ import { fr } from '@/i18n/fr';
 import { Equation } from '@/ui/Equation';
 import { NumPad } from '@/ui/NumPad';
 import type { GameProps } from '../types';
+import { AidButton } from '../AidButton';
+import { useAid } from '../useAid';
 import { useResponseTimer } from '../useResponseTimer';
 import { ChoiceCard } from './ChoiceCard';
 import { House } from './House';
@@ -39,8 +41,9 @@ function instruction(question: GameProps['question'], target: number): string {
  * Niveau 1 : maison visible, on pose la bonne carte-nombre sur la maison.
  * Niveaux 2-3 : pavé numérique, maison masquée jusqu'à la réponse.
  */
-export function House10Game({ question, active, onAnswer }: GameProps) {
+export function House10Game({ question, active, aid, onAnswer }: GameProps) {
   const elapsed = useResponseTimer();
+  const help = useAid(aid, question.level);
   const houseRef = useRef<HTMLDivElement>(null);
   const [typed, setTyped] = useState('');
   const [picked, setPicked] = useState<number | null>(null);
@@ -51,7 +54,7 @@ export function House10Game({ question, active, onAnswer }: GameProps) {
   const answered = picked !== null;
   const correct = picked === question.answer;
   const tone = !answered ? 'idle' : correct ? 'success' : 'help';
-  const showHouse = question.level === 1 || answered;
+  const showHouse = help.visible || answered;
 
   const answer = (value: number) => {
     if (!active || answered) return;
@@ -66,6 +69,7 @@ export function House10Game({ question, active, onAnswer }: GameProps) {
     <div className="flex flex-1 flex-col items-center gap-5">
       <p className="text-center text-instruction font-bold">{instruction(question, target)}</p>
 
+      {!showHouse && help.canAsk && <AidButton onClick={help.ask} disabled={!active} />}
       {showHouse && (
         <div ref={houseRef} className="flex w-full justify-center gap-3">
           {lit.map((n, i) => (
@@ -74,7 +78,10 @@ export function House10Game({ question, active, onAnswer }: GameProps) {
         </div>
       )}
 
-      <Equation display={question.display} slot={answered ? String(picked) : typed} tone={tone} />
+      {/* Maison cachée (aide désactivée) : on pose la carte sur l'opération. */}
+      <div ref={showHouse ? undefined : houseRef}>
+        <Equation display={question.display} slot={answered ? String(picked) : typed} tone={tone} />
+      </div>
 
       <div className="mt-auto w-full">
         {useChoices ? (

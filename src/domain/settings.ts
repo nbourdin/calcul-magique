@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: Settings = {
   voice: false,
   startLevel: 1,
   unlockAll: false,
+  visualAid: 'level',
 };
 
 /** Complète des réglages enregistrés par une version plus ancienne de l'app. */

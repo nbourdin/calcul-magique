@@ -8,6 +8,7 @@ import { CHARACTER_IDS } from '@/assets/characters';
 import { ListenButton } from '@/features/profile/ListenButton';
 import { useProfile } from '@/features/profile/profileStore';
 import { GAMES, gamesForSkill, isGameId } from '@/games';
+import { aidMode } from '@/games/aid';
 import { fr } from '@/i18n/fr';
 import { Icon } from '@/ui/Icon';
 import { EndScreen } from './EndScreen';
@@ -50,6 +51,7 @@ export function SeriesScreen({ daily = false }: { daily?: boolean }) {
   const seriesBeforeBreak = useProfile((s) => s.profile?.settings.seriesBeforeBreak ?? 3);
   const sessionMinutes = useProfile((s) => s.profile?.settings.sessionMinutes ?? 10);
   const chronoMode = useProfile((s) => s.profile?.settings.chronoMode ?? 'off');
+  const visualAid = useProfile((s) => s.profile?.settings.visualAid ?? 'level');
   const reloadProfile = useProfile((s) => s.load);
 
   const begin = useCallback(async () => {
@@ -195,6 +197,7 @@ export function SeriesScreen({ daily = false }: { daily?: boolean }) {
           attempt={item.attempt}
           active={run.phase === 'question' && !stopAsked}
           progress={done / run.questionCount}
+          aid={aidMode(visualAid, item.question.level)}
           onAnswer={(correct, ms) => void answer(correct, ms)}
         />
       </Suspense>
