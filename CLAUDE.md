@@ -90,4 +90,6 @@ Déploiement : chaque push sur `main` est vérifié puis publié sur GitHub Page
 
 - Avancer par jalons (PRD §12) : lister les tâches, implémenter, lancer tests + lint, résumer ce qui reste.
 - Commits petits et fréquents, un par sous-tâche. Pas de dépendance inutile.
+- Pas de PR : on pousse directement sur `main` (le déploiement relance lint, types et tests avant de
+  publier). Lancer `format:check`, `lint`, `typecheck`, `test:coverage` et `build` avant chaque push.
 - Ne rien modifier hors du périmètre du jalon en cours sans demander.
