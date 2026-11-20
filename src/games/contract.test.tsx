@@ -68,8 +68,6 @@ const answerWith: Record<GameId, (q: Question, value: number) => void> = {
     fireEvent.click(screen.getByRole('button', { name: fr.games.shop.submit }));
   },
   butterfly: (q, value) => {
-    const mirror = screen.queryByRole('button', { name: fr.games.butterfly.mirror });
-    if (mirror) fireEvent.click(mirror);
     if (q.level === 1) fireEvent.click(screen.getByRole('button', { name: fr.play.choiceLabel(value) }));
     else typeNumber(value);
   },

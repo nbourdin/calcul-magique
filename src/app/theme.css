@@ -217,6 +217,17 @@ body {
   transform-origin: center;
   animation: smoke 1.6s ease-out infinite;
 }
+/* Papillon : l'aile droite se déplie en reflet de la gauche (pliure sur le corps). */
+@keyframes mirror-unfold {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+}
+.anim-mirror {
+  transform-origin: 200px 150px;
+  animation: mirror-unfold 650ms cubic-bezier(0.2, 0.8, 0.3, 1.1) 150ms both;
+}
 @keyframes beckon {
   50% {
     transform: scale(1.1);
@@ -249,7 +260,8 @@ body {
   }
   .anim-pop-in,
   .anim-piece-fly,
-  .anim-train-in {
+  .anim-train-in,
+  .anim-mirror {
     animation: fade-in 300ms ease-out both !important;
   }
   .anim-train-out {

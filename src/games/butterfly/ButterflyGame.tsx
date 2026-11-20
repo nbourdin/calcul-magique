@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { playSound } from '@/app/audio';
 import { fr } from '@/i18n/fr';
 import { Equation } from '@/ui/Equation';
 import { NumPad } from '@/ui/NumPad';
@@ -28,25 +27,14 @@ function Dots({ n, cx, mirror }: { n: number; cx: number; mirror: boolean }) {
 }
 
 /** Le papillon : deux ailes identiques de part et d'autre du corps. */
-function Butterfly({
-  wings,
-  mirrored,
-  dots,
-  revealTotal,
-}: {
-  wings: Wings;
-  mirrored: boolean;
-  dots: boolean;
-  revealTotal: boolean;
-}) {
+function Butterfly({ wings, dots, revealTotal }: { wings: Wings; dots: boolean; revealTotal: boolean }) {
   const { mode, wing, total } = wings;
   const half = mode === 'half';
   const leftValue = half ? (revealTotal ? String(wing) : '?') : String(wing);
-  const rightValue = half ? leftValue : mirrored ? String(wing) : '?';
-  const showRightDots = dots && mirrored;
+  const rightValue = leftValue;
   const label = half
     ? fr.games.butterfly.halfLabel(total)
-    : fr.games.butterfly.wingsLabel(wing, mirrored ? wing : null, mode === 'near' && mirrored);
+    : fr.games.butterfly.wingsLabel(wing, wing, mode === 'near');
   return (
     <svg viewBox="0 0 400 300" className="w-full max-w-md" role="img" aria-label={label}>
       {/* Ailes : à gauche l'original, à droite le reflet. */}
@@ -62,20 +50,19 @@ function Butterfly({
         stroke="#6a4ab5"
         strokeWidth="4"
       />
-      <g className={mirrored || half ? '' : 'opacity-40'}>
+      {/* Le reflet se déplie à l'arrivée de la question : l'aile droite copie la gauche. */}
+      <g className="anim-mirror">
         <path
           d="M204 150 C280 10 380 20 370 120 C364 175 290 190 204 160 Z"
           fill={WING_FILL}
           stroke="#6a4ab5"
           strokeWidth="4"
-          strokeDasharray={mirrored || half ? undefined : '8 8'}
         />
         <path
           d="M204 165 C280 175 350 230 310 270 C270 300 215 240 204 180 Z"
           fill={WING_FILL}
           stroke="#6a4ab5"
           strokeWidth="4"
-          strokeDasharray={mirrored || half ? undefined : '8 8'}
         />
       </g>
       {/* Corps et antennes. */}
@@ -89,23 +76,16 @@ function Butterfly({
       />
       {/* Aide : des points à compter (pour une moitié, déjà partagés entre les ailes). */}
       {dots && <Dots n={wing} cx={110} mirror={false} />}
-      {(showRightDots || (dots && half)) && <Dots n={wing} cx={290} mirror />}
+      {dots && <Dots n={wing} cx={290} mirror />}
       <text x="110" y="250" textAnchor="middle" fontSize="44" fontWeight="800" fill="#2e2a4f">
         {leftValue}
       </text>
-      <text
-        x="290"
-        y="250"
-        textAnchor="middle"
-        fontSize="44"
-        fontWeight="800"
-        fill={mirrored || half ? '#2e2a4f' : '#6a4ab5'}
-      >
+      <text x="290" y="250" textAnchor="middle" fontSize="44" fontWeight="800" fill="#2e2a4f">
         {rightValue}
       </text>
       {/* Presque-double : le petit +1 en plus du reflet. */}
-      {mode === 'near' && mirrored && (
-        <g className="anim-pop-in">
+      {mode === 'near' && (
+        <g className="anim-pop-in [animation-delay:600ms]">
           <circle cx="352" cy="40" r="26" fill="#ffd66b" stroke="#2e2a4f" strokeWidth="3" />
           <text x="352" y="50" textAnchor="middle" fontSize="28" fontWeight="800" fill="#2e2a4f">
             +1
@@ -137,9 +117,9 @@ function Butterfly({
 /**
  * Jeu 7 — Le Papillon des doubles (doubles, moitiés, presque-doubles).
  * Les deux ailes d'un papillon sont identiques : le double se voit.
- * Niveau 1 : l'enfant touche le miroir magique (le nombre se recopie sur l'autre aile, puis
- * « +1 » pour un presque-double) et choisit parmi 3 propositions. Niveaux 2-3 : le reflet est
- * déjà là, réponse au pavé. Moitié : le total est sur le papillon, combien sur chaque aile ?
+ * À l'arrivée de la question, l'aile droite se déplie en reflet de la gauche (puis « +1 » pour
+ * un presque-double). Niveau 1 : 3 propositions ; niveaux 2-3 : pavé numérique.
+ * Moitié : le total est sur le papillon, combien sur chaque aile ?
  * Les points sur les ailes sont l'aide visuelle (réglable) ; les nombres restent toujours.
  */
 export function ButterflyGame({ question, active, aid, onAnswer }: GameProps) {
@@ -147,8 +127,6 @@ export function ButterflyGame({ question, active, aid, onAnswer }: GameProps) {
   const help = useAid(aid, question.level);
   const wings = wingsOf(question);
   const guided = question.level === 1;
-  const needsMirror = guided && wings.mode !== 'half';
-  const [mirrored, setMirrored] = useState(!needsMirror);
   const [typed, setTyped] = useState('');
   const [picked, setPicked] = useState<number | null>(null);
   const answered = picked !== null;
@@ -161,15 +139,8 @@ export function ButterflyGame({ question, active, aid, onAnswer }: GameProps) {
     onAnswer(value === question.answer, elapsed());
   };
 
-  const mirror = () => {
-    if (!active || mirrored) return;
-    playSound('bubble');
-    setMirrored(true);
-  };
-
-  const instruction = !mirrored
-    ? fr.games.butterfly.mirrorHint
-    : wings.mode === 'half'
+  const instruction =
+    wings.mode === 'half'
       ? fr.games.butterfly.half
       : wings.mode === 'near'
         ? fr.games.butterfly.near
@@ -186,28 +157,11 @@ export function ButterflyGame({ question, active, aid, onAnswer }: GameProps) {
       <p className="text-center text-instruction font-bold" aria-live="polite">
         {instruction}
       </p>
-      <Butterfly
-        wings={wings}
-        mirrored={mirrored || answered}
-        dots={help.visible || answered}
-        revealTotal={answered}
-      />
+      <Butterfly wings={wings} dots={help.visible || answered} revealTotal={answered} />
       {!answered && help.canAsk && <AidButton onClick={help.ask} disabled={!active} />}
 
       <div className="mt-auto w-full">
-        {!mirrored ? (
-          <div className="flex justify-center pb-4">
-            <button
-              data-answer
-              type="button"
-              onClick={mirror}
-              disabled={!active}
-              className="anim-beckon min-h-touch rounded-3xl bg-primary px-8 text-2xl font-extrabold text-white shadow-[0_6px_0_rgb(0_0_0/0.18)] active:translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              {fr.games.butterfly.mirror}
-            </button>
-          </div>
-        ) : guided && question.choices ? (
+        {guided && question.choices ? (
           <div className="flex justify-center gap-4 pb-4">
             {question.choices.map((c) => (
               <button

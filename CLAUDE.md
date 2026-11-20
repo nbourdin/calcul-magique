@@ -51,8 +51,8 @@ Déploiement : chaque push sur `main` est vérifié puis publié sur GitHub Page
   `SkillProgress.levelSince` comptent.
 - Calcul posé : `src/domain/column.ts` (colonnes, retenues, emprunts) ; jeu « Le Petit Train »
   (`src/games/train`), saisie des unités vers la gauche (`entry.ts`).
-- Doubles : jeu « Le Papillon des doubles » (`src/games/butterfly`, ailes identiques, miroir magique,
-  +1 pour un presque-double). « La Course du poney » (`race`) est le jeu générique à 3 propositions.
+- Doubles : jeu « Le Papillon des doubles » (`src/games/butterfly`, l'aile droite se déplie en reflet
+  de la gauche, +1 pour un presque-double). « La Course du poney » (`race`) est le jeu générique à 3 propositions.
 - Aides visuelles (bande de la boutique, maison, sauts en pointillés, points du papillon) : réglage parent
   `visualAid` (niveau 1 / sur demande / cachées), passé aux jeux par `GameProps.aid` (`useAid`, `AidButton`).
 - Boutique : à partir du niveau 2, une pièce utile manque une question sur deux (`shop/cash.ts`).

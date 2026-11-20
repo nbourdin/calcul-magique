@@ -215,8 +215,6 @@ export const fr = {
     },
     butterfly: {
       name: 'Le Papillon des doubles',
-      mirrorHint: 'Touche le miroir magique !',
-      mirror: 'Miroir magique',
       double: 'Combien sur les deux ailes ?',
       near: 'Le double, puis encore 1 !',
       half: 'Combien sur chaque aile ?',
