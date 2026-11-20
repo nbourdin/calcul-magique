@@ -38,8 +38,12 @@ const answerWith: Record<GameId, (q: Question, value: number) => void> = {
   },
   frog: (q, value) => {
     if (q.level === 1) {
-      for (const j of frogJumps(q).jumps)
-        fireEvent.click(screen.getByRole('button', { name: fr.games.frog.jump(jumpLabel(j)) }));
+      // Les sauts se font dans l'ordre : on touche à chaque fois le bouton actif.
+      for (const j of frogJumps(q).jumps) {
+        const buttons = screen.getAllByRole('button', { name: fr.games.frog.jump(jumpLabel(j)) });
+        const now = buttons.find((b) => !(b as HTMLButtonElement).disabled);
+        if (now) fireEvent.click(now);
+      }
     }
     typeNumber(value);
   },

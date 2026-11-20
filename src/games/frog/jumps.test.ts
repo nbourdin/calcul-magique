@@ -1,7 +1,7 @@
 import { createRng } from '@/domain/rng';
 import { questionForFact } from '@/domain/skills';
 import type { Level, SkillId } from '@/domain/types';
-import { frogJumps, jumpLabel, lineBounds } from './jumps';
+import { frogJumps, jumpLabel, labelStep, lineBounds } from './jumps';
 
 const q = (skillId: SkillId, fact: string, level: Level = 1) =>
   questionForFact(skillId, fact, level, createRng(1));
@@ -33,8 +33,15 @@ describe('sauts de la grenouille', () => {
     });
   });
 
-  it('bornes de la droite en dizaines entières', () => {
-    expect(lineBounds([6, 16, 15])).toEqual({ lo: 0, hi: 20 });
-    expect(lineBounds([30, 30])).toEqual({ lo: 30, hi: 40 });
+  it('droite zoomée sur le trajet, avec une case de marge', () => {
+    expect(lineBounds([7, 17, 16])).toEqual({ lo: 6, hi: 18 });
+    expect(lineBounds([0, 3])).toEqual({ lo: 0, hi: 8 });
+    expect(lineBounds([30, 31])).toEqual({ lo: 29, hi: 37 });
+  });
+
+  it('écrit tous les nombres sur un trajet court, sinon de 5 en 5 ou de 10 en 10', () => {
+    expect(labelStep(12)).toBe(1);
+    expect(labelStep(22)).toBe(5);
+    expect(labelStep(60)).toBe(10);
   });
 });
