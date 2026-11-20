@@ -14,9 +14,6 @@
 
 - [ ] **Audit Lighthouse mobile** (critère M6 jamais mesuré) : Performance ≥ 90, Accessibilité ≥ 95,
       PWA valide, sur `npm run build && npm run preview`.
-- [ ] **Son du Petit Train** : un sifflet court au départ du train (`.ogg` + `.mp3` dans
-      `src/assets/sounds`, ajouter l'id à `SoundId`). Aujourd'hui : son « bulle » pour la retenue et
-      son de réussite habituel.
 - [ ] **Essayer la nouvelle progression avec l'enfant** et régler si besoin :
   - rythme de montée de niveau (3 séries ≥ 90 %, ou 80 % des faits solides et 2 séries réussies),
     constantes dans `src/domain/engine/progression.ts` ;

@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { Question } from '@/domain/types';
+import { playSound } from '@/app/audio';
 import { fr } from '@/i18n/fr';
 import { TrainGame } from './TrainGame';
+
+vi.mock('@/app/audio', () => ({ playSound: vi.fn() }));
 
 const question = (a: number, op: '+' | '−', b: number): Question => ({
   id: 'q1',
@@ -72,5 +75,26 @@ describe('Le Petit Train', () => {
     key('Enter');
     expect(onAnswer).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: fr.numpad.submit })).toBeDisabled();
+  });
+
+  it('siffle quand le train part, jamais après une erreur', () => {
+    vi.useFakeTimers();
+    try {
+      const wrong = render(
+        <TrainGame question={question(23, '+', 14)} attempt={1} active onAnswer={vi.fn()} />,
+      );
+      for (const k of ['8', '3', 'Enter']) key(k);
+      vi.advanceTimersByTime(1000);
+      expect(playSound).not.toHaveBeenCalledWith('train');
+      wrong.unmount();
+
+      render(<TrainGame question={question(23, '+', 14)} attempt={1} active onAnswer={vi.fn()} />);
+      for (const k of ['7', '3', 'Enter']) key(k);
+      expect(playSound).not.toHaveBeenCalledWith('train');
+      vi.advanceTimersByTime(1000);
+      expect(playSound).toHaveBeenCalledWith('train');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
