@@ -5,6 +5,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // GitHub Pages sert le site sous /calcul-magique/ : le workflow de déploiement passe BASE_PATH.
+  // Les liens de l'app sont en hash (#/…), aucune redirection serveur n'est nécessaire.
+  base: process.env.BASE_PATH ?? '/',
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
@@ -25,8 +28,7 @@ export default defineConfig({
         short_name: 'Calcul Magique',
         description: 'Des petits jeux pour devenir fort en calcul mental.',
         lang: 'fr',
-        start_url: '/',
-        scope: '/',
+        // start_url et scope suivent `base` (valeurs par défaut du plugin).
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#fff8f0',
@@ -39,7 +41,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,ogg,mp3,json}'],
-        navigateFallback: '/index.html',
+        // Relatif à l'emplacement du service worker : marche à la racine comme sous /calcul-magique/.
+        navigateFallback: 'index.html',
       },
     }),
   ],

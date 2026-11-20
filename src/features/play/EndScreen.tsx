@@ -6,19 +6,25 @@ import { pieceOrder } from '@/domain/rewards/puzzle';
 import type { SeriesRewardOutcome } from '@/domain/rewards/seriesRewards';
 import type { Series } from '@/domain/types';
 import { ChooseCharacter } from '@/features/rewards/ChooseCharacter';
+import { Medal, MedalName } from '@/features/rewards/Medal';
 import { Puzzle } from '@/features/rewards/Puzzle';
 import { Reveal } from '@/features/rewards/Reveal';
 import { fr } from '@/i18n/fr';
 import { Button } from '@/ui/Button';
 import { buttonClass } from '@/ui/buttonClass';
 import { Icon } from '@/ui/Icon';
+import type { SeriesResult } from './sessionStore';
+import { LevelCard } from './LevelCard';
 
 interface EndScreenProps {
   series: Series;
   outcome: SeriesRewardOutcome | null;
   /** Assez de séries aujourd'hui : on encourage à s'arrêter (« à demain »). */
   suggestBreak: boolean;
-  onReplay: () => void;
+  /** Niveau suivant proposé, ou retour au niveau précédent (absent : rien à dire). */
+  levelChange?: SeriesResult['levelChange'];
+  /** Absent pour le défi du jour (une fois par jour). */
+  onReplay?: (() => void) | undefined;
 }
 
 type Stage = 'summary' | 'reveal' | 'choose' | 'chosen';
@@ -38,7 +44,7 @@ function streakMessage(outcome: SeriesRewardOutcome): string | null {
 }
 
 /** Fin de série : étoiles, pièce de puzzle qui vole à sa place, puis révélation si le puzzle est fini. */
-export function EndScreen({ series, outcome, suggestBreak, onReplay }: EndScreenProps) {
+export function EndScreen({ series, outcome, suggestBreak, levelChange = null, onReplay }: EndScreenProps) {
   const [stage, setStage] = useState<Stage>('summary');
   const piece = outcome?.piece ?? null;
   const character = piece ? getCharacter(piece.characterId) : undefined;
@@ -105,10 +111,26 @@ export function EndScreen({ series, outcome, suggestBreak, onReplay }: EndScreen
       {(series.bonusStars ?? 0) > 0 && (
         <p className="flex items-center gap-2 text-instruction font-bold">
           <Icon name="star" filled className="size-7 text-[#f5b82e]" />
-          {fr.end.bonus}
+          {series.mode === 'daily' ? fr.end.dailyBonus : fr.end.bonus}
         </p>
       )}
       {streakText && <p className="text-instruction font-bold text-help">{streakText}</p>}
+      {outcome && outcome.newMedals.length > 0 && (
+        <section className="flex flex-col items-center gap-2">
+          <p className="text-instruction font-bold">{fr.medals.new}</p>
+          <ul className="flex flex-wrap justify-center gap-4">
+            {outcome.newMedals.map((id) => (
+              <li key={id} className="anim-pop-in flex w-28 flex-col items-center gap-1 text-center">
+                <Medal id={id} />
+                <MedalName id={id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {levelChange && stage === 'summary' && !piece?.completed && (
+        <LevelCard skillId={series.skillId} change={levelChange} />
+      )}
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
         {piece?.completed && stage === 'summary' ? (
@@ -121,17 +143,21 @@ export function EndScreen({ series, outcome, suggestBreak, onReplay }: EndScreen
               <Icon name="home" />
               {fr.end.home}
             </Link>
-            <button type="button" onClick={onReplay} className="text-lg font-bold text-ink-soft underline">
-              {fr.tomorrow.more}
-            </button>
+            {onReplay && (
+              <button type="button" onClick={onReplay} className="text-lg font-bold text-ink-soft underline">
+                {fr.tomorrow.more}
+              </button>
+            )}
           </>
         ) : (
           <>
-            <Button onClick={onReplay}>
-              <Icon name="replay" />
-              {fr.end.again}
-            </Button>
-            <Link to="/" className={buttonClass('soft')}>
+            {onReplay && (
+              <Button onClick={onReplay}>
+                <Icon name="replay" />
+                {fr.end.again}
+              </Button>
+            )}
+            <Link to="/" className={buttonClass(onReplay ? 'soft' : 'primary')}>
               <Icon name="home" />
               {fr.end.home}
             </Link>

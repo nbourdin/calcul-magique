@@ -1,58 +1,40 @@
-# À faire
+# À faire — Calcul Magique
 
-Reste du MVP après le M6 (état au 19/11/2026). Relire le PRD et `CLAUDE.md` avant de commencer.
+État au 19/11/2026. Les jalons M0 à M6 du PRD (§12) sont livrés, avec ces ajouts :
 
-## 1. Les 8 badges (PRD §7)
+- **Progression plus douce** : 7 mondes courts au lieu de 5, nouvelle première marche « Plus et moins »
+  (`ADS`, ≤ 10), niveaux de `TAD` et `DBL` adoucis, « Je découvre » par niveau, prochaine étape
+  conseillée et niveau (●○○) sur la carte.
+- **Niveaux en jeu** : montée proposée en fin de série, retour doux après deux séries difficiles
+  (les règles existaient dans le domaine mais n'étaient pas branchées).
+- **Calcul posé** : addition (`APO`) et soustraction (`SPO`) posées, jeu « Le Petit Train ».
+- **Défi du jour** et **8 médailles** du PRD (§5 et §7), qui manquaient.
 
-Liste : « Première série », « 3 jours de suite », « Maître du 10 » (tous les faits C10 en boîte 4),
-« Sauteur de grenouille » (50 questions du jeu 2 `frog`), « Course parfaite » (10/10 au jeu 4 `race`),
-« Album à 3 », « 100 questions du jour », « Retour après une pause ».
-Un badge s'affiche comme une médaille, jamais comme une obligation (pas de barre « encore X pour… »).
+## Reste à faire
 
-Déjà en place :
+- [ ] **Audit Lighthouse mobile** (critère M6 jamais mesuré) : Performance ≥ 90, Accessibilité ≥ 95,
+      PWA valide, sur `npm run build && npm run preview`.
+- [ ] **Son du Petit Train** : un sifflet court au départ du train (`.ogg` + `.mp3` dans
+      `src/assets/sounds`, ajouter l'id à `SoundId`). Aujourd'hui : son « bulle » pour la retenue et
+      son de réussite habituel.
+- [ ] **Essayer la nouvelle progression avec l'enfant** et régler si besoin :
+  - rythme de montée de niveau (3 séries ≥ 90 %, ou 80 % des faits solides et 2 séries réussies),
+    constantes dans `src/domain/engine/progression.ts` ;
+  - ouverture des mondes (60 % d'une compétence maîtrisée, soit environ une semaine à cause des
+    intervalles Leitner) ; le parent peut toujours « Tout débloquer ».
+- [ ] **Calcul posé, suite** (hors MVP) : nombres à 3 chiffres, emprunts en chaîne. Le moteur
+      `src/domain/column.ts` et le train savent déjà les poser, il manque des générateurs/niveaux.
+- [ ] **Faits orphelins** de l'ancienne progression : `tad:a+b` à somme ≤ 10 (ancien niveau 1 de TAD,
+      désormais dans `ADS`) et moitiés de pairs > 20 de `DBL` restent en base. Ils restent jouables et
+      peuvent revenir en révision ; on pourrait les migrer vers `ads:` ou les ignorer.
+- [ ] **Mise en ligne sur GitHub Pages** (workflow prêt) : rendre le dépôt public, puis Settings → Pages →
+      Source « GitHub Actions ». Le site sera sur `https://nbourdin.github.io/calcul-magique/`.
+- [ ] **Illustrations finales des personnages** (question ouverte du PRD) : remplacer les SVG suffit,
+      aucun code à changer.
 
-- `RewardState.badges: string[]` existe (`src/domain/rewards/seriesRewards.ts`), toujours vide. Il est déjà
-  dans la table `rewards`, donc déjà exporté, importé et réinitialisé avec le profil.
-- Les données utiles sont là : séries (`gameId`, `firstTryCorrect`, `questionCount`), tentatives,
-  états des faits (boîtes Leitner), série de jours (`streak`), puzzles terminés (album).
+## Choix assumés
 
-À faire :
-
-- `src/domain/rewards/badges.ts` (pur) : type `BadgeId`, règle de chaque badge, et une fonction qui
-  renvoie les badges nouvellement gagnés à partir de l'état après une série. Tests (couverture ≥ 90 %).
-  Préciser « Retour après une pause » (proposition : rejouer après ≥ 7 jours sans jouer).
-- Brancher dans `finishSeries` (`src/data/rewards.ts`) : ajouter les nouveaux badges au résultat
-  (`SeriesRewardOutcome`) et les enregistrer.
-- Affichage : médaille dans l'écran de fin de série quand un badge est gagné (son `star`, animation
-  `anim-pop-in`), et une rangée de médailles dans l'album (gagnées en couleur, les autres en silhouette
-  discrète). Dessins en SVG dans le code, textes dans `src/i18n/fr.ts`.
-
-## 2. Proposition de changement de niveau (PRD §8)
-
-- Si 3 séries consécutives d'une compétence font ≥ 90 % de bonnes réponses du premier coup : proposer
-  le niveau suivant. L'enfant accepte ou refuse, jamais automatique.
-- Si 2 séries consécutives sont sous 50 % : revenir au niveau précédent avec un message encourageant et
-  reproposer « Je découvre ».
-
-Déjà en place :
-
-- Logique pure : `suggestLevelChange(firstTryRates)` et `canLevelUp` dans
-  `src/domain/engine/progression.ts` (testées, pas encore utilisées par l'interface).
-- Écriture du niveau : `setSkillLevel` dans `src/data/skills.ts` (utilisé par l'espace parent).
-- Séries récentes : `listRecentSeries` dans `src/data/progress.ts`.
-
-À faire :
-
-- Après une série, calculer la suggestion pour la compétence jouée (séries de cette compétence
-  uniquement, au niveau courant ; ignorer les séries jouées avec `?niveau=` forcé si possible).
-- Écran de fin : carte « Prête pour le niveau 2 ? » avec « Oui ! » / « Pas encore ». « Oui » appelle
-  `setSkillLevel` puis recharge le profil (`useProfile.load`). « Pas encore » ne repropose pas avant
-  3 nouvelles séries réussies.
-- Retour en arrière : `setSkillLevel(level - 1)`, message encourageant, puis « Je découvre » à la
-  prochaine ouverture de la compétence (remettre `discoveredAt` à vide ou passer `?revoir=1`).
-- Ne jamais descendre sous le niveau 1 ni monter au-delà des niveaux de la compétence.
-
-## Vérifications avant de committer
-
-`npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build`
-(c'est ce que lance la CI).
+- Playwright abandonné à la demande : les parcours du PRD §12 sont couverts par des tests
+  Testing Library (`router.test.tsx`, `SeriesScreen.test.tsx`, `sessionStore.test.ts`…).
+- « 100 questions du jour » (médaille) = 100 questions jouées en défis du jour, pour ne pas inciter
+  à jouer longtemps dans une même journée.

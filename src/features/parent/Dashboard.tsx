@@ -167,7 +167,9 @@ export function Dashboard({ profile }: { profile: Profile }) {
               {data.series.slice(0, 10).map((s) => (
                 <tr key={s.id} className="border-t border-ink/10">
                   <td className="py-2 pr-2">{dateTime(s.endedAt)}</td>
-                  <td className="pr-2">{fr.parent.skillNames[s.skillId]}</td>
+                  <td className="pr-2">
+                    {s.mode === 'daily' ? fr.daily.title : fr.parent.skillNames[s.skillId]}
+                  </td>
                   <td className="pr-2">{fr.games[s.gameId].name}</td>
                   <td aria-label={fr.parent.stars(s.stars)} className="whitespace-nowrap">
                     {[1, 2, 3].map((i) => (

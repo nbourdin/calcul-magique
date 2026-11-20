@@ -37,7 +37,10 @@ describe('parcours', () => {
     await user.click(await screen.findByRole('button', { name: fr.reveal.choose('Iris') }));
     expect(await screen.findByText(fr.home.welcomeName('Lila'))).toBeInTheDocument();
     expect(screen.getByText(fr.home.puzzleOf('Iris'))).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: fr.skills.C10 })).toHaveAttribute('href', '/competence/C10');
+    expect(screen.getByRole('link', { name: new RegExp(`^${fr.skills.C10}`) })).toHaveAttribute(
+      'href',
+      '/competence/C10',
+    );
     expect(screen.getByRole('region', { name: fr.worlds.lockedLabel(fr.worlds.river) })).toBeInTheDocument();
   });
 

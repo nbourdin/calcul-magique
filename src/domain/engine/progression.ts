@@ -51,6 +51,10 @@ export function isNextWorldUnlocked(previousSkillId: SkillId, states: readonly F
 
 export type LevelSuggestion = 'up' | 'down' | null;
 
+/** Séries minimales au niveau courant avant de proposer de monter sur la seule maîtrise des faits. */
+export const MASTERY_UP_MIN_SERIES = 2;
+export const MASTERY_UP_LAST_RATE = 0.8;
+
 /**
  * Difficulté adaptative légère, à partir des taux de réussite du premier coup des dernières
  * séries (la plus récente en dernier). « up » se propose à l'enfant, jamais automatiquement.
@@ -60,5 +64,36 @@ export function suggestLevelChange(firstTryRates: readonly number[]): LevelSugge
   if (lastUp.length === SUGGEST_UP_STREAK && lastUp.every((r) => r >= SUGGEST_UP_RATE)) return 'up';
   const lastDown = firstTryRates.slice(-SUGGEST_DOWN_STREAK);
   if (lastDown.length === SUGGEST_DOWN_STREAK && lastDown.every((r) => r < SUGGEST_DOWN_RATE)) return 'down';
+  return null;
+}
+
+export interface LevelAdviceInput {
+  skillId: SkillId;
+  level: Level;
+  states: readonly FactState[];
+  /**
+   * Taux de réussite du premier coup des séries jouées à ce niveau depuis le dernier
+   * changement (ou le dernier « pas encore »), la plus récente en dernier.
+   */
+  rates: readonly number[];
+}
+
+/**
+ * Conseil de fin de série (PRD §4 et §8) : « up » se propose à l'enfant quand elle réussit
+ * très bien (3 séries ≥ 90 %) ou quand 80 % des faits du niveau sont solides ; « down »
+ * ramène d'un niveau après 2 séries difficiles, avec un message encourageant.
+ */
+export function levelAdvice({ skillId, level, states, rates }: LevelAdviceInput): LevelSuggestion {
+  const { levels } = getSkill(skillId);
+  const suggestion = suggestLevelChange(rates);
+  if (levels.some((l) => l > level)) {
+    const last = rates[rates.length - 1] ?? 0;
+    const factsReady =
+      rates.length >= MASTERY_UP_MIN_SERIES &&
+      last >= MASTERY_UP_LAST_RATE &&
+      canLevelUp(skillId, level, states);
+    if (suggestion === 'up' || factsReady) return 'up';
+  }
+  if (suggestion === 'down' && levels.some((l) => l < level)) return 'down';
   return null;
 }

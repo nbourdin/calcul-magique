@@ -3,6 +3,8 @@ import { factsFor } from '../skills';
 import type { FactState, LeitnerBox, Question, SkillId } from '../types';
 import { newFactState } from './leitner';
 import {
+  canPlayDaily,
+  composeDailySeries,
   composeSeries,
   orderWithoutAdjacentRepeats,
   SERIES_SIZE,
@@ -219,5 +221,51 @@ describe('spreadAnswerPositions', () => {
 
   it('laisse passer les questions sans propositions', () => {
     expect(spreadAnswerPositions([q(1)], createRng(1))[0]?.choices).toBeUndefined();
+  });
+});
+
+describe('défi du jour', () => {
+  const NOW_D = 1_000_000_000;
+  const known = (skillId: SkillId, factKey: string, box: LeitnerBox, dueAt: number): FactState => ({
+    ...newFactState('p1', factKey, skillId, 0),
+    box,
+    dueAt,
+    seenCount: 2,
+  });
+
+  it('demande quelques faits déjà rencontrés', () => {
+    const four = ['c10:1', 'c10:2', 'c10:3', 'c10:4'].map((k) => known('C10', k, 1, NOW_D));
+    expect(canPlayDaily(four)).toBe(false);
+    expect(canPlayDaily([...four, known('ADS', 'ads:5+3', 1, NOW_D)])).toBe(true);
+    expect(canPlayDaily([{ ...known('C10', 'c10:5', 0, 0), seenCount: 0 }, ...four])).toBe(false);
+  });
+
+  it('10 questions mixtes, les faits échus d’abord, jamais de fait nouveau', () => {
+    const due = [
+      known('C10', 'c10:3', 1, NOW_D - 10),
+      known('ADS', 'ads:5+3', 0, NOW_D - 10),
+      known('P9', 'p9:6', 2, NOW_D - 10),
+    ];
+    const later = range(0, 9).map((n) => known('C20', `c20:${n}`, 3, NOW_D + 1e9));
+    const questions = composeDailySeries({ states: [...later, ...due], now: NOW_D, rng: createRng(4) });
+    expect(questions).toHaveLength(SERIES_SIZE);
+    const keys = questions.map((q) => q.factKey);
+    for (const d of due) expect(keys).toContain(d.factKey);
+    expect(new Set(questions.map((q) => q.skillId)).size).toBeGreaterThanOrEqual(3);
+    for (const k of keys) expect([...due, ...later].map((s) => s.factKey)).toContain(k);
+  });
+
+  it('peu de faits connus : chacun revient au plus 2 fois, jamais d’affilée', () => {
+    const five = range(1, 5).map((n) => known('C10', `c10:${n}`, 1, NOW_D));
+    const keys = composeDailySeries({ states: five, now: NOW_D, rng: createRng(9) }).map((q) => q.factKey);
+    expect(keys).toHaveLength(10);
+    for (const k of new Set(keys)) expect(keys.filter((x) => x === k)).toHaveLength(2);
+    for (let i = 1; i < keys.length; i++) expect(keys[i]).not.toBe(keys[i - 1]);
+  });
+
+  it('présente chaque compétence à son niveau', () => {
+    const states = range(1, 5).map((n) => known('C10', `c10:${n}`, 1, NOW_D));
+    const questions = composeDailySeries({ states, now: NOW_D, rng: createRng(1), levels: { C10: 3 } });
+    expect(questions.every((q) => q.level === 3 && q.display.missing === 'a')).toBe(true);
   });
 });

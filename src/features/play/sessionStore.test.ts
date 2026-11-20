@@ -4,17 +4,20 @@ import { createRng } from '@/domain/rng';
 import type { SkillId } from '@/domain/types';
 import { db } from '@/data/db';
 import { listAttemptsOfSeries, listFactStates, listRecentSeries } from '@/data/progress';
+import { getSkillProgress } from '@/data/skills';
+import { dailyDoneToday } from '@/data/rewards';
 import { useSession } from './sessionStore';
 
 const NOW = new Date(2026, 10, 19, 17, 0).getTime();
 
-async function startSeries() {
+async function startSeries(level: 1 | 2 | 3 = 1, adaptive = true) {
   await useSession.getState().start({
     profileId: 'p1',
     catalogIds: ['fee', 'licorne'],
     skillId: 'C10',
     gameId: 'house10',
-    level: 1,
+    level,
+    adaptive,
     rng: createRng(1),
     now: () => NOW,
   });
@@ -52,6 +55,7 @@ describe('session de jeu', () => {
       skillId: 'C10',
     });
     expect(result?.outcome?.piece).toMatchObject({ characterId: 'fee', piecesPlaced: 1 });
+    expect(result?.outcome?.newMedals).toEqual(['firstSeries']);
     expect(result?.seriesToday).toBe(1);
     expect(await listAttemptsOfSeries(result?.series.id ?? '')).toHaveLength(10);
     expect(await listRecentSeries('p1')).toHaveLength(1);
@@ -107,5 +111,94 @@ describe('session de jeu', () => {
       .getState()
       .start({ profileId: 'p1', catalogIds: [], skillId: 'XYZ' as SkillId, gameId: 'house10', level: 1 });
     expect(useSession.getState().status).toBe('error');
+  });
+
+  describe('niveau conseillé en fin de série', () => {
+    it('3 séries très réussies : le niveau suivant est proposé, sans changer tout seul', async () => {
+      for (let i = 0; i < 2; i++) {
+        await startSeries();
+        await play(() => true);
+        expect(useSession.getState().result?.levelChange).toBeNull();
+      }
+      await startSeries();
+      await play(() => true);
+      const { result } = useSession.getState();
+      expect(result?.series.level).toBe(1);
+      expect(result?.levelChange).toEqual({ kind: 'up', level: 2 });
+      expect((await getSkillProgress('p1', 'C10'))?.level ?? 1).toBe(1);
+    });
+
+    it('2 séries difficiles : retour au niveau précédent', async () => {
+      for (let i = 0; i < 2; i++) {
+        await startSeries(2);
+        await play((attempt) => attempt === 2);
+      }
+      expect(useSession.getState().result?.levelChange).toEqual({ kind: 'down', level: 1 });
+      expect(await getSkillProgress('p1', 'C10')).toMatchObject({ level: 1, levelSince: NOW });
+    });
+
+    it('pas de conseil quand le niveau est imposé', async () => {
+      for (let i = 0; i < 3; i++) {
+        await startSeries(1, false);
+        await play(() => true);
+      }
+      expect(useSession.getState().result?.levelChange).toBeNull();
+    });
+
+    it('un niveau trop haut pour la compétence est ramené au dernier', async () => {
+      await startSeries(3);
+      await play(() => true);
+      expect(useSession.getState().result?.series.level).toBe(3);
+      await useSession.getState().start({
+        profileId: 'p1',
+        catalogIds: ['fee'],
+        skillId: 'C20',
+        gameId: 'house10',
+        level: 3,
+        rng: createRng(1),
+        now: () => NOW,
+      });
+      await play(() => true);
+      expect(useSession.getState().result?.series.level).toBe(2);
+    });
+  });
+
+  describe('défi du jour', () => {
+    const startDaily = () =>
+      useSession.getState().startDaily({
+        profileId: 'p1',
+        catalogIds: ['fee'],
+        gameId: 'race',
+        rng: createRng(2),
+        now: () => NOW,
+      });
+
+    it('révise les faits déjà vus, donne une étoile bonus et compte pour aujourd’hui', async () => {
+      await startSeries();
+      await play(() => true);
+      const seen = new Set((await listFactStates('p1')).map((s) => s.factKey));
+      expect(await dailyDoneToday('p1', NOW)).toBe(false);
+
+      await startDaily();
+      const { run } = useSession.getState();
+      expect(run?.questionCount).toBe(10);
+      expect(run?.queue).toHaveLength(10);
+      for (const item of run?.queue ?? []) expect(seen.has(item.question.factKey)).toBe(true);
+      await play(() => true);
+      const { result } = useSession.getState();
+      expect(result?.series).toMatchObject({ mode: 'daily', stars: 3, bonusStars: 1, gameId: 'race' });
+      expect(result?.series.level).toBeUndefined();
+      expect(result?.outcome?.starsGained).toBe(4);
+      expect(result?.levelChange).toBeNull();
+      expect(await dailyDoneToday('p1', NOW)).toBe(true);
+      // 10/10 à la course : médaille « Course parfaite » (la première série l'a déjà eue).
+      expect(result?.outcome?.newMedals).toEqual(['perfectRace']);
+      expect((await db.rewards.get('p1'))?.badges).toEqual(['firstSeries', 'perfectRace']);
+    });
+
+    it('sans fait connu, le défi ne démarre pas', async () => {
+      await startDaily();
+      expect(useSession.getState().status).toBe('error');
+    });
   });
 });

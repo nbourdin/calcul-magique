@@ -109,11 +109,51 @@ export function composeSeries(input: ComposeSeriesInput): SeriesPlan {
   // Encore de la place (compétence avec très peu de faits) : on répète les nouveaux.
   repeatChosenSkill();
 
+  return { questions: toQuestions(picks, levelOf, rng), newFactKeys };
+}
+
+function toQuestions(picks: readonly Pick[], levelOf: (id: SkillId) => Level, rng: Rng): Question[] {
   const questions = orderWithoutAdjacentRepeats(picks, rng).map((p, i) => ({
     ...questionForFact(p.skillId, p.factKey, levelOf(p.skillId), rng),
     id: `${i + 1}-${p.factKey}`,
   }));
-  return { questions: spreadAnswerPositions(questions, rng), newFactKeys };
+  return spreadAnswerPositions(questions, rng);
+}
+
+/** Faits déjà rencontrés nécessaires pour un défi du jour (10 questions, 2 fois max chacun). */
+export const DAILY_MIN_KNOWN_FACTS = Math.ceil(SERIES_SIZE / MAX_SAME_FACT_PER_SERIES);
+
+const knownFacts = (states: readonly FactState[]) =>
+  states.filter((s) => s.seenCount > 0 && isSkillAvailable(s.skillId));
+
+export function canPlayDaily(states: readonly FactState[]): boolean {
+  return knownFacts(states).length >= DAILY_MIN_KNOWN_FACTS;
+}
+
+export interface ComposeDailyInput {
+  states: readonly FactState[];
+  now: number;
+  rng: Rng;
+  /** Niveau courant de chaque compétence (défaut : 1). */
+  levels?: Partial<Record<SkillId, Level>>;
+}
+
+/**
+ * Défi du jour (PRD §5) : 10 questions mixtes, toutes compétences confondues, tirées des
+ * faits à réviser (échus, boîtes basses d'abord), puis de ceux en cours d'apprentissage,
+ * puis des faits maîtrisés. Jamais de fait nouveau : c'est une révision.
+ */
+export function composeDailySeries({ states, now, rng, levels = {} }: ComposeDailyInput): Question[] {
+  const known = knownFacts(states);
+  const ordered = (list: readonly FactState[]) => shuffle(rng, list).sort(byPriority);
+  const base: Pick[] = [
+    ...ordered(known.filter((s) => isDue(s, now))),
+    ...ordered(known.filter((s) => !isDue(s, now) && !isMastered(s))),
+    ...ordered(known.filter((s) => !isDue(s, now) && isMastered(s))),
+  ].slice(0, SERIES_SIZE);
+  // Peu de faits connus : chacun peut revenir une seconde fois.
+  const picks = [...base, ...base].slice(0, SERIES_SIZE);
+  return toQuestions(picks, (id) => levels[id] ?? 1, rng);
 }
 
 /**

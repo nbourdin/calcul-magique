@@ -1,6 +1,6 @@
 import { applyAnswer, newFactState } from '@/domain/engine/leitner';
 import { startOfLocalDayPlus } from '@/domain/time';
-import type { Attempt, FactState, GameId, Question, Series } from '@/domain/types';
+import type { Attempt, FactState, GameId, Level, Question, Series, SkillId } from '@/domain/types';
 import { db, newId } from './db';
 
 export function listFactStates(profileId: string): Promise<FactState[]> {
@@ -71,6 +71,20 @@ export function listAttemptsOfSeries(seriesId: string): Promise<Attempt[]> {
 
 export async function saveSeries(series: Series): Promise<void> {
   await db.series.put(series);
+}
+
+/** Séries d'une compétence jouées à un niveau depuis une date, de la plus ancienne à la plus récente. */
+export async function listLevelSeries(
+  profileId: string,
+  skillId: SkillId,
+  level: Level,
+  since: number,
+): Promise<Series[]> {
+  const all = await db.series
+    .where('[profileId+endedAt]')
+    .between([profileId, since], [profileId, Infinity], false, true)
+    .toArray();
+  return all.filter((s) => s.skillId === skillId && s.level === level && s.mode !== 'daily');
 }
 
 export function listRecentSeries(profileId: string, limit = 10): Promise<Series[]> {

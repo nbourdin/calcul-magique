@@ -5,6 +5,7 @@ import {
   allFacts,
   canLevelUp,
   isNextWorldUnlocked,
+  levelAdvice,
   levelBoxRatio,
   skillMasteryRatio,
   suggestLevelChange,
@@ -71,5 +72,31 @@ describe('suggestLevelChange', () => {
     [[], null],
   ] as const)('%j → %s', (rates, expected) => {
     expect(suggestLevelChange(rates)).toBe(expected);
+  });
+});
+
+describe('conseil de fin de série (levelAdvice)', () => {
+  const solid = c10.map((k) => fact(k, 3));
+
+  it('propose de monter après 3 séries très réussies', () => {
+    expect(levelAdvice({ skillId: 'C10', level: 1, states: [], rates: [0.9, 1, 0.9] })).toBe('up');
+    expect(levelAdvice({ skillId: 'C10', level: 1, states: [], rates: [0.9, 1] })).toBeNull();
+  });
+
+  it('propose de monter quand les faits du niveau sont solides et la série réussie', () => {
+    expect(levelAdvice({ skillId: 'C10', level: 1, states: solid, rates: [0.6, 0.8] })).toBe('up');
+    // Une seule série depuis le dernier « pas encore » : on attend.
+    expect(levelAdvice({ skillId: 'C10', level: 1, states: solid, rates: [0.8] })).toBeNull();
+    // Dernière série difficile : on attend aussi.
+    expect(levelAdvice({ skillId: 'C10', level: 1, states: solid, rates: [0.9, 0.5] })).toBeNull();
+  });
+
+  it('jamais au-dessus du dernier niveau', () => {
+    expect(levelAdvice({ skillId: 'C20', level: 2, states: [], rates: [1, 1, 1] })).toBeNull();
+  });
+
+  it('redescend après 2 séries difficiles, jamais sous le niveau 1', () => {
+    expect(levelAdvice({ skillId: 'C10', level: 2, states: [], rates: [0.4, 0.3] })).toBe('down');
+    expect(levelAdvice({ skillId: 'C10', level: 1, states: [], rates: [0.4, 0.3] })).toBeNull();
   });
 });

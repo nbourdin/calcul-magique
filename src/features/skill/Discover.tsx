@@ -1,35 +1,48 @@
 import { useEffect, useMemo, useState } from 'react';
+import { columnLayout } from '@/domain/column';
 import { evaluate } from '@/domain/display';
 import { createRng } from '@/domain/rng';
-import { factsFor, questionForFact } from '@/domain/skills';
-import type { SkillId } from '@/domain/types';
+import { clampLevel, factsFor, getSkill, questionForFact } from '@/domain/skills';
+import type { Level, Question, SkillId } from '@/domain/types';
 import { frogJumps } from '@/games/frog/jumps';
 import { NumberLine } from '@/games/frog/NumberLine';
 import { House } from '@/games/house10/House';
+import { ColumnBoard } from '@/games/train/ColumnBoard';
+import { solvedEntry } from '@/games/train/entry';
 import { ListenButton } from '@/features/profile/ListenButton';
 import { fr } from '@/i18n/fr';
 import { Button } from '@/ui/Button';
 import { Equation } from '@/ui/Equation';
+import { discoverIntro } from './discoverIntro';
 
-/** Exemple montré pour chaque compétence (toujours le même, au niveau 1). */
-const DEMO_FACTS: Record<SkillId, string> = {
-  C10: 'c10:7',
-  C20: 'c20:13',
-  CDS: 'cds:7',
-  DBL: 'dbl:6',
-  PDB: 'pdb:6+7',
-  TAD: 'tad:8+5',
-  P9: 'p9:6',
-  M9: 'm9:23',
-  D10: 'd10:34+10',
-  T2: 'x:2x4',
-  T5: 'x:5x3',
-  T10: 'x:10x4',
-  T3: 'x:3x4',
-  T4: 'x:4x3',
+/** Exemple montré pour chaque compétence, un par niveau (le dernier sert aux niveaux suivants). */
+const DEMO_FACTS: Record<SkillId, readonly string[]> = {
+  ADS: ['ads:5+3', 'ads:2+6', 'ads:9-6'],
+  C10: ['c10:7'],
+  C20: ['c20:13'],
+  CDS: ['cds:7'],
+  DBL: ['dbl:6', 'dbl:h12', 'dbl:14'],
+  PDB: ['pdb:6+7'],
+  TAD: ['tad:12+5', 'tad:8+5', 'tad:13-5'],
+  P9: ['p9:6', 'p9:47', 'p9:23+19'],
+  M9: ['m9:23', 'm9:52'],
+  D10: ['d10:34+10', 'd10:58-30'],
+  APO: ['apo:3+4', 'apo:7+5'],
+  SPO: ['spo:8-3', 'spo:3-7'],
+  T2: ['x:2x4'],
+  T5: ['x:5x3'],
+  T10: ['x:10x4'],
+  T3: ['x:3x4'],
+  T4: ['x:4x3'],
 };
 
 const HOUSE_SKILLS: readonly SkillId[] = ['C10', 'C20', 'CDS'];
+const COLUMN_SKILLS: readonly SkillId[] = ['APO', 'SPO'];
+
+function demoFact(skillId: SkillId, level: Level): string {
+  const facts = DEMO_FACTS[skillId];
+  return facts[level - 1] ?? facts[facts.length - 1] ?? factsFor(skillId, level)[0] ?? '';
+}
 /** Rythme de la démonstration : 20 à 30 s en tout avec l'essai (PRD §5). */
 const STEP_MS = 4000;
 
@@ -37,16 +50,28 @@ const STEP_MS = 4000;
  * « Je découvre » (PRD §5) : la stratégie animée sur un exemple (environ 20 à 30 s),
  * puis l'enfant répond elle-même à l'exemple guidé.
  */
-export function Discover({ skillId, onDone }: { skillId: SkillId; onDone: () => void }) {
+export function Discover({
+  skillId,
+  level: wanted = 1,
+  onDone,
+}: {
+  skillId: SkillId;
+  /** Niveau de la compétence : chaque niveau montre son propre exemple. */
+  level?: Level;
+  onDone: () => void;
+}) {
+  const level = clampLevel(getSkill(skillId), wanted);
+  const intro = discoverIntro(skillId, level);
   const [demo, practice] = useMemo(() => {
     // Exemple montré, puis un second exemple que l'enfant résout elle-même.
-    const facts = factsFor(skillId, 1);
-    const next = facts[(facts.indexOf(DEMO_FACTS[skillId]) + 1) % facts.length] ?? DEMO_FACTS[skillId];
+    const shown = demoFact(skillId, level);
+    const facts = factsFor(skillId, level);
+    const next = facts[(facts.indexOf(shown) + 1) % facts.length] ?? shown;
     return [
-      questionForFact(skillId, DEMO_FACTS[skillId], 1, createRng(7)),
-      questionForFact(skillId, next, 1, createRng(8)),
+      questionForFact(skillId, shown, level, createRng(7)),
+      questionForFact(skillId, next, level, createRng(8)),
     ];
-  }, [skillId]);
+  }, [skillId, level]);
   const [shown, setShown] = useState(0);
   const [phase, setPhase] = useState<'demo' | 'try' | 'done'>('demo');
   const [wrong, setWrong] = useState<number | null>(null);
@@ -64,7 +89,9 @@ export function Discover({ skillId, onDone }: { skillId: SkillId; onDone: () => 
   // À l'essai, la stratégie ne se montre qu'après une erreur.
   const ratio =
     phase === 'try' && wrong === null ? 0 : steps.length === 0 ? 1 : Math.min(1, shown / steps.length);
-  const visual = HOUSE_SKILLS.includes(skillId) ? (
+  const visual = COLUMN_SKILLS.includes(skillId) ? (
+    <ColumnDemo question={question} ratio={ratio} />
+  ) : HOUSE_SKILLS.includes(skillId) ? (
     <HouseDemo
       given={question.display.a}
       target={evaluate(question.display)}
@@ -78,8 +105,8 @@ export function Discover({ skillId, onDone }: { skillId: SkillId; onDone: () => 
     <section className="flex w-full flex-col items-center gap-5 text-center">
       <h1 className="text-3xl font-extrabold text-primary">{fr.discover.title}</h1>
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <p className="text-2xl font-bold">{fr.discover.intro[skillId]}</p>
-        <ListenButton text={fr.discover.intro[skillId]} />
+        <p className="text-2xl font-bold">{intro}</p>
+        <ListenButton text={intro} />
       </div>
       <Equation
         display={question.display}
@@ -204,5 +231,22 @@ function FrogDemo({ question, ratio }: { question: Parameters<typeof frogJumps>[
       done={Math.round(ratio * jumps.length)}
       revealPosition={ratio >= 1}
     />
+  );
+}
+
+function ColumnDemo({ question, ratio }: { question: Question; ratio: number }) {
+  const layout = columnLayout(question.display);
+  if (!layout) return null;
+  // Les colonnes se remplissent au rythme des étapes, unités d'abord.
+  const columns = Math.min(layout.result.length, Math.floor(ratio * (layout.result.length + 1)));
+  return (
+    <div className="flex justify-center">
+      <ColumnBoard
+        layout={layout}
+        entry={solvedEntry(layout, columns)}
+        tone={columns === layout.result.length ? 'success' : 'idle'}
+        label={fr.games.train.board(question.display.a, question.display.op, question.display.b ?? 0)}
+      />
+    </div>
   );
 }

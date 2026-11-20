@@ -38,6 +38,7 @@ export const routes = [
       },
       { path: 'competence/:skillId', element: child(<SkillScreen />) },
       { path: 'jouer/:skillId', element: child(<SeriesScreen />) },
+      { path: 'defi', element: child(<SeriesScreen daily />) },
       { path: 'choisir', element: child(<ChooseScreen />) },
       { path: 'album', element: child(<AlbumScreen />) },
       { path: 'album/:characterId', element: child(<CharacterScreen />) },

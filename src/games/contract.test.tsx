@@ -11,6 +11,7 @@ import { House10Game } from './house10/House10Game';
 import { SKILL_GAMES } from './index';
 import { RaceGame } from './race/RaceGame';
 import { ShopGame } from './shop/ShopGame';
+import { TrainGame } from './train/TrainGame';
 import type { GameProps } from './types';
 
 /** Les jeux importés directement (le registre les charge à la demande). */
@@ -20,6 +21,7 @@ const COMPONENTS: Record<GameId, (props: GameProps) => React.JSX.Element> = {
   bubbles: BubblesGame,
   race: RaceGame,
   shop: ShopGame,
+  train: TrainGame,
 };
 
 /** Tape un nombre au clavier puis Entrée (pavé numérique). */
@@ -58,6 +60,18 @@ const answerWith: Record<GameId, (q: Question, value: number) => void> = {
       }
     }
     fireEvent.click(screen.getByRole('button', { name: fr.games.shop.submit }));
+  },
+  train: (q, value) => {
+    // Calcul posé : une case par chiffre du résultat, remplie depuis les unités.
+    // Les retenues se touchent quand elles apparaissent (sinon elles se posent seules).
+    const cells = String(q.answer).length;
+    const digits = [...String(value).padStart(cells, '0')].reverse();
+    for (const d of digits) {
+      const star = screen.queryByRole('button', { name: fr.games.train.carryButton });
+      if (star) fireEvent.click(star);
+      fireEvent.keyDown(window, { key: d });
+    }
+    fireEvent.keyDown(window, { key: 'Enter' });
   },
 };
 
