@@ -11,11 +11,11 @@ permissions:
   pages: write
   id-token: write
 
-# Un seul déploiement à la fois : celui en cours va au bout, le suivant attend son tour
-# (pas de déploiement « annulé » quand deux pushs se suivent de près).
+# Un seul déploiement à la fois : un push plus récent annule celui en cours (seul le dernier
+# état de main compte). Un déploiement « annulé » dans Actions n'est donc pas une erreur.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
