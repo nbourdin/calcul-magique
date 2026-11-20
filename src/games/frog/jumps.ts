@@ -58,9 +58,20 @@ export function frogJumps(question: Question): { start: number; jumps: Jump[] } 
   return { start, jumps: chain ?? splitJump(start, end - start) };
 }
 
-/** Bornes de la droite : dizaines entières autour des positions visitées. */
+/** Écart minimal affiché, pour que la droite garde l'allure d'une règle. */
+export const MIN_SPAN = 8;
+
+/**
+ * Bornes de la droite : zoomée sur les positions visitées (une case de marge de chaque côté),
+ * pour que les nombres restent gros sur un téléphone.
+ */
 export function lineBounds(points: readonly number[]): { lo: number; hi: number } {
-  const lo = Math.floor(Math.min(...points) / 10) * 10;
-  const hi = Math.max(lo + 10, Math.ceil(Math.max(...points) / 10) * 10);
+  const lo = Math.max(0, Math.min(...points) - 1);
+  const hi = Math.max(Math.max(...points) + 1, lo + MIN_SPAN);
   return { lo, hi };
+}
+
+/** Pas entre deux nombres écrits sous la droite : 1, 5 ou 10 selon la longueur. */
+export function labelStep(span: number): number {
+  return span <= 14 ? 1 : span <= 40 ? 5 : 10;
 }

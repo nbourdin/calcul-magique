@@ -178,8 +178,10 @@ export const fr = {
     },
     frog: {
       name: 'Le Saut de la grenouille',
-      guided: 'Fais sauter la grenouille !',
-      answer: 'Où est la grenouille ?',
+      forward: (n: number) => `Avance de ${n} !`,
+      backward: (n: number) => `Recule de ${n} !`,
+      landed: 'Sur quel nombre est-elle arrivée ?',
+      predict: 'Où va-t-elle arriver ?',
       jump: (label: string) => `Sauter ${label}`,
       line: (n: number) => `La grenouille est sur ${n}`,
     },
