@@ -243,6 +243,7 @@ export function ShopGame({ question, active, aid, onAnswer }: GameProps) {
         <div className="flex flex-wrap items-center justify-center gap-3">
           {coins.map((c) => (
             <button
+              data-answer
               key={c}
               type="button"
               onClick={() => add(c)}

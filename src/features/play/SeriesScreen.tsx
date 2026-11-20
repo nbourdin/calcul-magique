@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { answeredCount, currentItem } from '@/domain/engine/run';
 import { isSkillAvailable } from '@/domain/skills';
@@ -11,6 +11,7 @@ import { GAMES, gamesForSkill, isGameId } from '@/games';
 import { aidMode } from '@/games/aid';
 import { fr } from '@/i18n/fr';
 import { Icon } from '@/ui/Icon';
+import { useAutoFocusAnswers } from '@/ui/autoFocusAnswers';
 import { EndScreen } from './EndScreen';
 import { HelpPanel } from './HelpPanel';
 import { useSession } from './sessionStore';
@@ -40,6 +41,7 @@ export function SeriesScreen({ daily = false }: { daily?: boolean }) {
 
   const navigate = useNavigate();
   const [stopAsked, setStopAsked] = useState(false);
+  const gameRef = useRef<HTMLDivElement>(null);
   const { status, run, result, start, startDaily, answer, next, reset } = useSession();
   // Une fois par jour : on regarde à l'arrivée (la fin du défi met l'état à jour).
   const [dailyAlreadyDone] = useState(() => daily && useProfile.getState().dailyDone);
@@ -116,6 +118,14 @@ export function SeriesScreen({ daily = false }: { daily?: boolean }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [status]);
 
+  // Au clavier, la première réponse possible est sélectionnée d'office à chaque question.
+  const current = run ? currentItem(run) : undefined;
+  useAutoFocusAnswers(
+    gameRef,
+    status === 'playing' && run?.phase === 'question' && !stopAsked,
+    current ? `${current.question.id}-${current.attempt}` : '',
+  );
+
   if (!game) throw new Response('', { status: 404 });
   if (dailyAlreadyDone) return <Navigate to="/" replace />;
 
@@ -190,17 +200,19 @@ export function SeriesScreen({ daily = false }: { daily?: boolean }) {
         <ChronoBar key={`${item.question.id}-${item.attempt}`} />
       )}
 
-      <Suspense fallback={<p className="text-center text-instruction text-ink-soft">{fr.play.loading}</p>}>
-        <Game
-          key={`${item.question.id}-${item.attempt}`}
-          question={item.question}
-          attempt={item.attempt}
-          active={run.phase === 'question' && !stopAsked}
-          progress={done / run.questionCount}
-          aid={aidMode(visualAid, item.question.level)}
-          onAnswer={(correct, ms) => void answer(correct, ms)}
-        />
-      </Suspense>
+      <div ref={gameRef} className="contents">
+        <Suspense fallback={<p className="text-center text-instruction text-ink-soft">{fr.play.loading}</p>}>
+          <Game
+            key={`${item.question.id}-${item.attempt}`}
+            question={item.question}
+            attempt={item.attempt}
+            active={run.phase === 'question' && !stopAsked}
+            progress={done / run.questionCount}
+            aid={aidMode(visualAid, item.question.level)}
+            onAnswer={(correct, ms) => void answer(correct, ms)}
+          />
+        </Suspense>
+      </div>
 
       {run.phase === 'success' && (
         <p

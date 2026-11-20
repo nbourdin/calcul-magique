@@ -31,6 +31,7 @@ export function ChoiceCard({ value, disabled, state, dropTarget, onPick, onDragO
 
   return (
     <button
+      data-answer
       type="button"
       disabled={disabled}
       aria-label={fr.play.choiceLabel(value)}

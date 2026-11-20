@@ -198,6 +198,7 @@ export function ButterflyGame({ question, active, aid, onAnswer }: GameProps) {
         {!mirrored ? (
           <div className="flex justify-center pb-4">
             <button
+              data-answer
               type="button"
               onClick={mirror}
               disabled={!active}
@@ -210,6 +211,7 @@ export function ButterflyGame({ question, active, aid, onAnswer }: GameProps) {
           <div className="flex justify-center gap-4 pb-4">
             {question.choices.map((c) => (
               <button
+                data-answer
                 key={c}
                 type="button"
                 disabled={!active || answered}

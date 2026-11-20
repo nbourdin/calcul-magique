@@ -85,6 +85,7 @@ export function RaceGame({ question, active, progress = 0, onAnswer }: GameProps
               </div>
             )}
             <button
+              data-answer
               type="button"
               disabled={!active || answered}
               onClick={() => choose(i)}

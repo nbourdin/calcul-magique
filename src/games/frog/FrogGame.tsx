@@ -95,6 +95,7 @@ export function FrogGame({ question, active, aid, onAnswer }: GameProps) {
             return (
               <li key={i}>
                 <button
+                  data-answer
                   type="button"
                   disabled={!active || state !== 'now'}
                   onClick={() => tapJump(i)}

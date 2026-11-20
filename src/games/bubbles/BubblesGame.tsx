@@ -56,6 +56,7 @@ export function BubblesGame({ question, active, onAnswer }: GameProps) {
           const isPicked = picked === value;
           return (
             <button
+              data-answer
               key={value}
               type="button"
               disabled={!active || answered}
