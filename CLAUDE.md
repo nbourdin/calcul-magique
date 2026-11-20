@@ -21,6 +21,8 @@ TypeScript est épinglé en `~6.0` : typescript-eslint ne supporte pas encore TS
 - `npm run lint` · `npm run typecheck` · `npm run format` / `format:check`
 
 La CI (`.github/workflows/ci.yml`) lance format:check, lint, typecheck, test et build.
+Déploiement : chaque push sur `main` est vérifié puis publié sur GitHub Pages
+(`.github/workflows/deploy.yml`, site sous `/calcul-magique/` via `BASE_PATH`). Version de Node dans `.node-version`.
 
 ## Règles d'architecture (non négociables)
 

@@ -27,8 +27,10 @@
 - [ ] **Faits orphelins** de l'ancienne progression : `tad:a+b` à somme ≤ 10 (ancien niveau 1 de TAD,
       désormais dans `ADS`) et moitiés de pairs > 20 de `DBL` restent en base. Ils restent jouables et
       peuvent revenir en révision ; on pourrait les migrer vers `ads:` ou les ignorer.
-- [ ] **Questions ouvertes du PRD** : hébergement (Cloudflare Pages, Netlify…) ou usage local ;
-      illustrations finales des personnages (remplacer les SVG suffit, aucun code à changer).
+- [ ] **Mise en ligne sur GitHub Pages** (workflow prêt) : rendre le dépôt public, puis Settings → Pages →
+      Source « GitHub Actions ». Le site sera sur `https://nbourdin.github.io/calcul-magique/`.
+- [ ] **Illustrations finales des personnages** (question ouverte du PRD) : remplacer les SVG suffit,
+      aucun code à changer.
 
 ## Choix assumés
 
