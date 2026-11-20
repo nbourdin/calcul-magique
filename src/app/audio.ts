@@ -1,7 +1,7 @@
 import type { Howl } from 'howler';
 
 /** Sons courts embarqués (PRD §10) : jamais de son négatif, volume modéré, bouton muet global. */
-export type SoundId = 'click' | 'correct' | 'piece' | 'complete' | 'star' | 'bubble' | 'jump';
+export type SoundId = 'click' | 'correct' | 'piece' | 'complete' | 'star' | 'bubble' | 'jump' | 'train';
 
 const urls = import.meta.glob<string>('../assets/sounds/*.{ogg,mp3}', {
   eager: true,

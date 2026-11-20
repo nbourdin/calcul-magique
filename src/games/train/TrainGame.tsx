@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { playSound } from '@/app/audio';
 import { columnLayout, type ColumnLayout } from '@/domain/column';
 import { fr } from '@/i18n/fr';
@@ -16,6 +16,9 @@ import {
   typeDigit,
   type Entry,
 } from './entry';
+
+/** Le sifflet suit de peu le son de réussite, au moment où le train démarre. */
+const WHISTLE_DELAY_MS = 150;
 
 /**
  * Jeu 6 — Le Petit Train (additions et soustractions posées).
@@ -38,6 +41,13 @@ function Train({ question, active, onAnswer, layout }: GameProps & { layout: Col
 
   const answered = picked !== null;
   const correct = picked === question.answer;
+
+  // Bonne réponse : le train part en sifflant (juste après le son de réussite de la série).
+  useEffect(() => {
+    if (!correct) return;
+    const timer = setTimeout(() => playSound('train'), WHISTLE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [correct]);
   const pending = pendingAction(layout, entry);
   const value = entryValue(entry);
   const locked = !active || answered;
