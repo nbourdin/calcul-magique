@@ -71,6 +71,9 @@ Déploiement : chaque push sur `main` est vérifié puis publié sur GitHub Page
 - Erreurs en orange doux (`help`), jamais de rouge. Couleur jamais seule porteuse d'information.
 - Consignes ≥ 20 px (`text-instruction`), nombres ≥ 36 px (`text-number`).
 - Cibles tactiles : 64 px pour les réponses (`min-h-touch`), 48 px ailleurs (`min-h-tap`).
+- Clavier : les flèches passent au bouton ou lien le plus proche dans leur direction
+  (`useArrowNavigation`, `src/ui/arrowNavigation.ts`, branché dans `Layout`) ; Entrée ou Espace active.
+  Les jeux n'utilisent pas les flèches (chiffres, Entrée, Retour arrière, 1-2-3 à la course).
 - Respecter `prefers-reduced-motion` : les classes `anim-*` deviennent des fondus (voir `theme.css`).
 - Violet principal `#6a4ab5` : contraste AA sur tous les fonds (l'ancien `#7b5cc4` échouait sur lavande).
 - Sons : `playSound()` de `src/app/audio.ts` (Howler chargé au premier son, fichiers dans
